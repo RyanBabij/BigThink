@@ -80,20 +80,50 @@ class Board
 	
 	
 	public:
+	~Board()
+	{
+		// wipe the board array
+		for (int y=0;y<8;++y)
+		{ 
+			for (int x=0; x<8; ++x)
+			{
+				if ( aBoard[x][y] != 0 )
+				{
+					delete aBoard[x][y];
+				}
+				aBoard[x][y] = 0;
+			}
+		}
+	}
+	
 	Board()
 	{
 		std::cout<<"Board const\n";
 		
 		sideToMove=WHITE;
-		// wipe the board
+		// wipe the board array
 		for (int y=0;y<8;++y)
 		{ 
 			for (int x=0; x<8; ++x)
 			{
+				if ( aBoard[x][y] != 0 )
+				{
+					delete aBoard[x][y];
+				}
 				aBoard[x][y] = 0;
 			}
 		}
 		
+	}
+	
+	Board* copy()
+	{
+		Board* subBoard = new Board(*this);
+		
+		// does this copy objects in aBoard? I assume it only copys the pointers.
+		
+		
+		return subBoard;
 	}
 	
 	void reset()
