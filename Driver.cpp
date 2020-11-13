@@ -74,10 +74,67 @@ int main (int narg, char ** arg)
 	// pick a random state.
 	//mainBoard.pickRandomSub();
 	
-	for (int i=0;i<3;++i)
+	// for (int i=0;i<3;++i)
+	// {
+		// std::cout<<"Turn: "<<i<<"\n";
+		// std::cout<<mainBoard.getState()<<"\n";
+	// }
+	
+	int i=0;
+	while(i<100)
 	{
+		int x1=-1;
+		int y1=-1;
+		int x2=-1;
+		int y2=-1;
+
 		std::cout<<"Turn: "<<i<<"\n";
 		std::cout<<mainBoard.getState()<<"\n";
+		
+		std::cout<<"Which piece to move?\n";
+		std::cin >> x1 >> y1;
+		std::cout<<"Where to move it?\n";
+		std::cin >> x2 >> y2;
+		
+		while (std::cin.fail())
+		{
+			std::cout<<"Invalid input, try again.\n";
+			std::cin.clear();
+			std::cin.ignore();
+		}
+		
+		if ( mainBoard.isSafe(x1,y1) )
+		{
+			if (mainBoard.isSafe(x2,y2))
+			{
+				std::cout<<"Command. Move "<<x1<<", "<<y1<<" to "<<x2<<", "<<y2<<"\n";
+				
+				if ( mainBoard.aBoard[x1][y1] != 0)
+				{
+					if ( x1==x2 && y1==y2 )
+					{
+						std::cout<<"Error: Cannot move to same position.\n";
+					}
+					else
+					{
+						// move the piece
+						mainBoard.move(x1,y1,x2,y2);
+					}
+				}
+				else
+				{
+					std::cout<<"Error: Nothing there to move.\n";
+				}
+			}
+			else
+			{
+				std::cout<<"Error: Bad move coordinate.\n";
+			}
+		}
+		else
+		{
+			std::cout<<"Error: Bad start coordinate.\n";
+		}
 	}
 	
 	return 0;

@@ -15,14 +15,16 @@ class Board
 	// B = black bishop
 	// Q = black queen
 	// K = black king
-	
-	Piece* aBoard [8][8];
+
 	bool sideToMove;
 	
 	Vector <Board*> vSubstates;
 	
 	
 	public:
+	
+	Piece* aBoard [8][8];
+	
 	~Board()
 	{
 		// wipe the board array
