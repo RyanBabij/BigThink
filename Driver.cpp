@@ -137,6 +137,30 @@ class Board
 			}
 		}
 	}
+	
+	// Equals operator: Identify identical board states.
+	
+	
+	bool move (int x1, int y1, int x2, int y2)
+	{
+		// move piece from (x1,y1) to (x2,y2). Return false if invalid move.
+		// assume any target piece is captured.
+		if ( isSafe(x1,y1) == false || isSafe(x2,y2) == false ||
+		aBoard[x1][y1] == 0 )
+		{
+			return false;
+		}
+		
+		Piece* movePiece = aBoard[x1][y1];
+		aBoard[x1][y1]=0;
+		if (aBoard[x2][y2] != 0 )
+		{
+			delete aBoard[x2][y2];
+		}
+		aBoard[x2][y2] = movePiece;
+		
+		return true;
+	}
 
 	void reset()
 	{
@@ -172,25 +196,12 @@ class Board
 	// only return all moves for this piece, in the form of state vector
 	Vector <Board*>* getAllMovesFrom(Piece* piece)
 	{
-		if (piece==0 || isSafe(piece->x,piece->y))
+		if (piece==0 || isSafe(piece->x,piece->y)==false)
 		{
 			return 0;
 		}
 	
-		 //Vector <Board*>* vBoard = new Vector <Board*>;
-		
-		// unsafe array or nothing there
-		//if (isSafe(x,y) == false || aBoard[x][y]==0)
-		//{
-		//	return 0;
-		//}
-		
 		Vector <Board*> * vBoard = new Vector <Board*>;
-		
-		//if (aBoard[x][y] == 'p')
-		//{
-		//}
-		//else 
 			
 		// pawn, can move up 1 space, attack diagonally.
 		if (piece->getShortName() == 'p')
@@ -201,6 +212,10 @@ class Board
 				if ( aBoard[piece->x][piece->y+1] == 0 )
 				{
 					// piece can move up 1 space. Make state for this.
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,piece->y+1);
+					std::cout<<"adding move\n";
+					vBoard->push(subBoard);
 				}
 			}
 			// can it attack diagonally left?
@@ -230,9 +245,54 @@ class Board
 		return vBoard;
 	}
 	
+	// only return all moves for this piece, in the form of state vector
+	void addAllMovesFrom(Piece* piece, Vector <Board*> * vBoard)
+	{
+		if (piece==0 || isSafe(piece->x,piece->y)==false || vBoard==0)
+		{
+			std::cout<<"addallmoves error\n";
+			return;
+		}
+	
+		//Vector <Board*> * vBoard = new Vector <Board*>;
+			
+		// pawn, can move up 1 space, attack diagonally.
+		if (piece->getShortName() == 'p')
+		{
+			// can it move up 1 space?
+			if (isSafe(piece->x,piece->y+1))
+			{
+				if ( aBoard[piece->x][piece->y+1] == 0 )
+				{
+					// piece can move up 1 space. Make state for this.
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,piece->y+1);
+					std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+			}
+			// can it attack diagonally left?
+			if (isSafe(piece->x-1,piece->y+1))
+			{
+				if ( aBoard[piece->x-1][piece->y+1] != 0 && aBoard[piece->x-1][piece->y+1]->team != piece->team )
+				{
+					// piece can move up 1 space. Make state for this.
+				}
+			}
+			// can it attack diagonally right?
+			if (isSafe(piece->x+1,piece->y+1))
+			{
+				if ( aBoard[piece->x+1][piece->y+1] != 0 && aBoard[piece->x+1][piece->y+1]->team != piece->team )
+				{
+					// piece can move up 1 space. Make state for this.
+				}
+			}
+		}
+	}
+	
 	bool isSafe(const int x, const int y)
 	{
-		return (x<8 && x>0 && y<8 && y>0);
+		return (x<8 && x>=0 && y<8 && y>=0);
 	}
 	
 	std::string getState()
@@ -293,6 +353,7 @@ int main (int narg, char ** arg)
 	
 	// get all white pieces
 	auto vPiece = mainBoard.getAllPieces(WHITE);
+	std::cout<<"White has "<<vPiece->size()<<" pieces.\n";
 	
 	std::cout<<"Printing all white pieces:\n";
 	if (vPiece == 0)
@@ -305,7 +366,19 @@ int main (int narg, char ** arg)
 		std::cout<<(*vPiece)(i)->getName()<<"\n";
 	}
 	
-	for (int i=0;i<10;++i)
+	Vector <Board*> * vMoves = new Vector <Board*>;
+	//Vector <Board*> * vMoves;
+	// get all moves for all white pieces
+	for (int i=0;i<vPiece->size();++i)
+	{
+		std::cout<<"Generating moves for piece: "<<(*vPiece)(i)->getName()<<"\n";
+
+		//Vector <Board*> * vMoves = mainBoard.getAllMovesFrom((*vPiece)(i));
+		mainBoard.addAllMovesFrom((*vPiece)(i),vMoves);
+	}
+	std::cout<<"Found "<<vMoves->size()<<" moves.\n";
+	
+	for (int i=0;i<3;++i)
 	{
 		std::cout<<"Turn: "<<i<<"\n";
 		std::cout<<mainBoard.getState()<<"\n";
