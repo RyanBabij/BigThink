@@ -478,23 +478,46 @@ class Board
 		return (x<8 && x>=0 && y<8 && y>=0);
 	}
 	
-	std::string getState()
+	std::string getState(bool displayCoordinates=false)
 	{
-		std::string strBoard = "";
+		unsigned char vertLine = 179;
+		unsigned char horizontalLine = 196;
+		unsigned char intersect = 197;
+		unsigned char dot = 249;
+		
+		std::string strBoard = "  ";
+		for (int i=0;i<16;++i)
+		{
+			//strBoard+=horizontalLine;
+		}
+		strBoard+="\n";
+		
 		for (int y=7;y>=0;--y)
 		{
+			if (displayCoordinates)
+			{
+				strBoard+=std::to_string(y);
+				strBoard+=" ";
+			}
 			for (int x=0;x<8;++x)
 			{
 				if ( aBoard[x][y]==0 )
 				{
-					strBoard+="-";
+					strBoard+=vertLine;
+					strBoard+=dot;
 				}
 				else
 				{
+					strBoard+=vertLine;
 					strBoard += aBoard[x][y]->getShortName();
 				}
 			}
+			strBoard+=vertLine;
 			strBoard+="\n";
+		}
+		if (displayCoordinates)
+		{
+			strBoard+="   0 1 2 3 4 5 6 7";
 		}
 		return strBoard;
 	}

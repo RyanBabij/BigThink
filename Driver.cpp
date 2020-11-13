@@ -89,7 +89,7 @@ int main (int narg, char ** arg)
 		int y2=-1;
 
 		std::cout<<"Turn: "<<i<<"\n";
-		std::cout<<mainBoard.getState()<<"\n";
+		std::cout<<mainBoard.getState(true)<<"\n";
 		
 		std::cout<<"Which piece to move?\n";
 		std::cin >> x1 >> y1;
