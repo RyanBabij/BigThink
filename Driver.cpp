@@ -16,9 +16,11 @@
 // however to start out we can use simple material points system.
 
 #include <Container/Vector/Vector.hpp>
+#include <Math/Random/RandomLehmer.hpp>
 
 #include <iostream>
 #include <string>
+#include <time.h>
 
 #define WHITE true
 #define BLACK false
@@ -54,6 +56,8 @@ class Piece
 		return shortName;
 	}
 };
+
+RandomLehmer rng;
 
 class Board
 {
@@ -182,10 +186,25 @@ class Board
 			aBoard[i][1] = new Piece ("pawn", 'p', WHITE, i, 1);
 			aBoard[i][6] = new Piece("pawn", 'P', BLACK, i, 6);
 		}
-		//aBoard[0][0] = 'r';
-		//aBoard[7][0] = 'r';
-		//aBoard[1][0] = 'n';
-		//aBoard[6][0] = 'n';
+		aBoard[0][0] = new Piece ("rook", 'r', WHITE, 0,0);
+		aBoard[7][0] = new Piece ("rook", 'r', WHITE, 7,0);
+		aBoard[0][7] = new Piece ("rook", 'R', BLACK, 0,7);
+		aBoard[7][7] = new Piece ("rook", 'R', BLACK, 7,7);
+		
+		aBoard[1][0] = new Piece ("knight", 'n', WHITE, 1,0);
+		aBoard[6][0] = new Piece ("knight", 'n', WHITE, 6,0);
+		aBoard[1][7] = new Piece ("knight", 'N', BLACK, 1,7);
+		aBoard[6][7] = new Piece ("knight", 'N', BLACK, 6,7);
+		
+		aBoard[2][0] = new Piece ("bishop", 'b', WHITE, 2,0);
+		aBoard[5][0] = new Piece ("bishop", 'b', WHITE, 5,0);
+		aBoard[2][7] = new Piece ("bishop", 'B', BLACK, 2,7);
+		aBoard[5][7] = new Piece ("bishop", 'B', BLACK, 5,7);
+		
+		aBoard[3][0] = new Piece ("queen", 'q', WHITE, 3,0);
+		aBoard[4][0] = new Piece ("king", 'k', WHITE, 4,0);
+		aBoard[3][7] = new Piece ("queen", 'Q', BLACK, 3,7);
+		aBoard[4][7] = new Piece ("king", 'K', BLACK, 4,7);
 	}
 	
 	// Return all states for this side.
@@ -346,6 +365,7 @@ class Board
 
 int main (int narg, char ** arg)
 {
+	rng.seed(time(NULL));
 	
 	Board mainBoard;
 	mainBoard.reset();
@@ -383,6 +403,9 @@ int main (int narg, char ** arg)
 	{
 		std::cout<<(*vMoves)(i)->getState()<<"\n";
 	}
+	
+	// pick a random state.
+	//mainBoard.pickRandomSub();
 	
 	for (int i=0;i<3;++i)
 	{
