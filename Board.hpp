@@ -86,7 +86,32 @@ class Board
 	
 	// Equals operator: Identify identical board states for pruning?
 	
-	
+	//Assignment operator: Copy board state.
+	Board operator=(const Board& board)
+	{
+		
+		sideToMove=board.sideToMove;
+		
+		// wipe the board array
+		for (int y=0;y<8;++y)
+		{ 
+			for (int x=0; x<8; ++x)
+			{
+				if ( board.aBoard[x][y] != 0 )
+				{
+					// copy Piece
+					aBoard[x][y] = new Piece (*board.aBoard[x][y]);
+				}
+				else
+				{
+					aBoard[x][y] = 0;
+				}
+			}
+		}
+
+		return board;
+	}
+
 	bool move (int x1, int y1, int x2, int y2)
 	{
 		// move piece from (x1,y1) to (x2,y2). Return false if invalid move.
@@ -104,6 +129,8 @@ class Board
 			delete aBoard[x2][y2];
 		}
 		aBoard[x2][y2] = movePiece;
+		movePiece->x = x2;
+		movePiece->y = y2;
 		
 		return true;
 	}
@@ -125,7 +152,7 @@ class Board
 		for (int i=0;i<8;++i)
 		{
 			aBoard[i][1] = new Piece ("pawn", 'p', WHITE, i, 1);
-			aBoard[i][6] = new Piece("pawn", 'P', BLACK, i, 6);
+			aBoard[i][6] = new Piece("pawn", 'b', BLACK, i, 6);
 		}
 		aBoard[0][0] = new Piece ("rook", 'r', WHITE, 0,0);
 		aBoard[7][0] = new Piece ("rook", 'r', WHITE, 7,0);
@@ -157,146 +184,9 @@ class Board
 	// only return all moves for this piece, in the form of state vector
 	Vector <Board*>* getAllMovesFrom(Piece* piece)
 	{
-		if (piece==0 || isSafe(piece->x,piece->y)==false)
-		{
-			return 0;
-		}
-		std::cout<<"Get all from "<<piece->getShortName()<<"\n";
-	
-		Vector <Board*> * vBoard = new Vector <Board*>;
-			
-		// pawn, can move up 1 space, attack diagonally.
-		if (piece->getShortName() == 'p')
-		{
-			// can it move up 1 space?
-			if (isSafe(piece->x,piece->y+1))
-			{
-				if ( aBoard[piece->x][piece->y+1] == 0 )
-				{
-					// piece can move up 1 space. Make state for this.
-					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x,piece->y+1);
-					std::cout<<"adding move\n";
-					vBoard->push(subBoard);
-					
-					// can it move up 2 spaces?
-					if (isSafe(piece->x,piece->y+2))
-					{
-						if ( aBoard[piece->x][piece->y+2] == 0 )
-						{
-							// piece can move up 1 space. Make state for this.
-							Board* subBoard2 = new Board(*this);
-							subBoard2->move(piece->x,piece->y,piece->x,piece->y+2);
-							std::cout<<"adding move\n";
-							vBoard->push(subBoard2);
-						}
-					}
-				}
-			}
-
-			
-			// can it attack diagonally left?
-			if (isSafe(piece->x-1,piece->y+1))
-			{
-				if ( aBoard[piece->x-1][piece->y+1] != 0 && aBoard[piece->x-1][piece->y+1]->team != piece->team )
-				{
-					// piece can move up 1 space. Make state for this.
-					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x-1,piece->y+1);
-					std::cout<<"adding move\n";
-					vBoard->push(subBoard);
-				}
-			}
-			// can it attack diagonally right?
-			if (isSafe(piece->x+1,piece->y+1))
-			{
-				if ( aBoard[piece->x+1][piece->y+1] != 0 && aBoard[piece->x+1][piece->y+1]->team != piece->team )
-				{
-					// piece can move up 1 space. Make state for this.
-					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x-1,piece->y+1);
-					std::cout<<"adding move\n";
-					vBoard->push(subBoard);
-				}
-			}
-		}
-		// knight, moves in L shape
-		if (piece->getShortName() == 'n')
-		{
-			std::cout<<"checking knight\n";
-			// left
-			if (isSafe(piece->x-2,piece->y+1))
-			{
-				if ( aBoard[piece->x-2][piece->y+1] == 0 || aBoard[piece->x-2][piece->y+1]->team != piece->team )
-				{
-					// piece can move up 1 space. Make state for this.
-					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x-2,piece->y+1);
-					std::cout<<"adding move\n";
-					vBoard->push(subBoard);
-				}
-			}
-			if (isSafe(piece->x-2,piece->y-1))
-			{
-				if ( aBoard[piece->x-2][piece->y-1] == 0 || aBoard[piece->x-2][piece->y-1]->team != piece->team )
-				{
-					// piece can move up 1 space. Make state for this.
-					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x-2,piece->y-1);
-					std::cout<<"adding move\n";
-					vBoard->push(subBoard);
-				}
-			}
-			// right
-			if (isSafe(piece->x+2,piece->y+1))
-			{
-				if ( aBoard[piece->x+2][piece->y+1] == 0 || aBoard[piece->x+2][piece->y+1]->team != piece->team )
-				{
-					// piece can move up 1 space. Make state for this.
-					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x+2,piece->y+1);
-					std::cout<<"adding move\n";
-					vBoard->push(subBoard);
-				}
-			}
-			if (isSafe(piece->x+2,piece->y-1))
-			{
-				if ( aBoard[piece->x+2][piece->y-1] == 0 || aBoard[piece->x+2][piece->y-1]->team != piece->team )
-				{
-					// piece can move up 1 space. Make state for this.
-					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x+2,piece->y-1);
-					std::cout<<"adding move\n";
-					vBoard->push(subBoard);
-				}
-			}
-			// up
-			if (isSafe(piece->x+1,piece->y+2))
-			{
-				std::cout<<"safe\n";
-				if ( aBoard[piece->x+1][piece->y+2] == 0 || aBoard[piece->x+1][piece->y+2]->team != piece->team )
-				{
-					// piece can move up 1 space. Make state for this.
-					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x+1,piece->y+2);
-					std::cout<<"adding move\n";
-					vBoard->push(subBoard);
-				}
-			}
-			if (isSafe(piece->x-1,piece->y+2))
-			{
-				if ( aBoard[piece->x-1][piece->y+2] == 0 || aBoard[piece->x-1][piece->y+2]->team != piece->team )
-				{
-					// piece can move up 1 space. Make state for this.
-					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x-1,piece->y+2);
-					std::cout<<"adding move\n";
-					vBoard->push(subBoard);
-				}
-			}
-			// down
-			
-		}
+		Vector <Board*>* vBoard = new Vector <Board*>;
+		
+		addAllMovesFrom(piece, vBoard);
 			
 		if (vBoard->size() == 0)
 		{
@@ -371,8 +261,8 @@ class Board
 				}
 			}
 		}
-		// black pawn, can move down 1 space, attack diagonally.
-		if (piece->getShortName() == 'P')
+		// black bawn, can move down 1 space, attack diagonally.
+		if (piece->getShortName() == 'b')
 		{
 			// can it move up 1 space?
 			if (isSafe(piece->x,piece->y-1))
@@ -429,7 +319,7 @@ class Board
 		
 		
 		// knight, moves in L shape
-		if (piece->getShortName() == 'n')
+		if (piece->getShortName() == 'n' || piece->getShortName() == 'N')
 		{
 			std::cout<<"checking knight\n";
 			// left
@@ -527,6 +417,65 @@ class Board
 				}
 			}
 			
+		}
+		
+		// rook, moves in straight line
+		if (piece->getShortName() == 'r' || piece->getShortName() == 'R')
+		{
+			// down
+			for (int file = piece->x-1; file >=0; --file)
+			{
+				if ( aBoard[piece->x][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[piece->x][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+			}
+			// up
+			for (int file = piece->x+1; file<8; ++file)
+			{
+				if ( aBoard[piece->x][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[piece->x][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+			}
+			// left
+			// right
 		}
 	}
 	

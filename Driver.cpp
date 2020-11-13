@@ -32,6 +32,7 @@ RandomLehmer rng;
 
 int main (int narg, char ** arg)
 {
+
 	rng.seed(time(NULL));
 	
 	Board mainBoard;
@@ -101,6 +102,12 @@ int main (int narg, char ** arg)
 			std::cout<<"Invalid input, try again.\n";
 			std::cin.clear();
 			std::cin.ignore();
+			
+			x1=-1;
+			y1=-1;
+			x2=-1;
+			y2=-1;
+			--i;
 		}
 		
 		if ( mainBoard.isSafe(x1,y1) )
@@ -167,7 +174,7 @@ int main (int narg, char ** arg)
 						int randMove = rng.rand(vBlackMoves->size());
 						
 						
-						//mainBoard = (*vBlackMoves)(randMove);
+						mainBoard = *(*vBlackMoves)(randMove);
 						
 						++i;
 					}
