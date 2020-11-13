@@ -106,26 +106,38 @@ class Board
 		{ 
 			for (int x=0; x<8; ++x)
 			{
-				if ( aBoard[x][y] != 0 )
+				//if ( aBoard[x][y] != 0 )
+				//{
+					//delete aBoard[x][y];
+				//}
+				aBoard[x][y] = 0;
+			}
+		}
+		std::cout<<"End board const\n";
+	}
+	Board(const Board& board) // copy constructor 
+	{
+		// I assume the default copy constructor copys the pointers in aBoard,
+		// but doesn't copy the Piece objects.
+		sideToMove=board.sideToMove;
+		
+		// wipe the board array
+		for (int y=0;y<8;++y)
+		{ 
+			for (int x=0; x<8; ++x)
+			{
+				if ( board.aBoard[x][y] != 0 )
 				{
-					delete aBoard[x][y];
+					// copy Piece
+					aBoard[x][y] = new Piece (*board.aBoard[x][y]);
+					//Piece * p = new Piece (*board.aBoard[x][y]);
+					//aBoard[x][y] = new Piece("pawn", 'p', WHITE, 0, 0);
 				}
 				aBoard[x][y] = 0;
 			}
 		}
-		
 	}
-	
-	Board* copy()
-	{
-		Board* subBoard = new Board(*this);
-		
-		// does this copy objects in aBoard? I assume it only copys the pointers.
-		
-		
-		return subBoard;
-	}
-	
+
 	void reset()
 	{
 		std::cout<<"Resetting board\n";
