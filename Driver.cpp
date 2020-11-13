@@ -130,15 +130,16 @@ class Board
 				{
 					// copy Piece
 					aBoard[x][y] = new Piece (*board.aBoard[x][y]);
-					//Piece * p = new Piece (*board.aBoard[x][y]);
-					//aBoard[x][y] = new Piece("pawn", 'p', WHITE, 0, 0);
 				}
-				aBoard[x][y] = 0;
+				else
+				{
+					aBoard[x][y] = 0;
+				}
 			}
 		}
 	}
 	
-	// Equals operator: Identify identical board states.
+	// Equals operator: Identify identical board states for pruning?
 	
 	
 	bool move (int x1, int y1, int x2, int y2)
@@ -377,6 +378,11 @@ int main (int narg, char ** arg)
 		mainBoard.addAllMovesFrom((*vPiece)(i),vMoves);
 	}
 	std::cout<<"Found "<<vMoves->size()<<" moves.\n";
+	
+	for(int i=0;i<vMoves->size();++i)
+	{
+		std::cout<<(*vMoves)(i)->getState()<<"\n";
+	}
 	
 	for (int i=0;i<3;++i)
 	{
