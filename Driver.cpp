@@ -81,7 +81,7 @@ int main (int narg, char ** arg)
 	// }
 	
 	int i=0;
-	while(i<100)
+	while(++i<100)
 	{
 		int x1=-1;
 		int y1=-1;
@@ -119,6 +119,57 @@ int main (int narg, char ** arg)
 					{
 						// move the piece
 						mainBoard.move(x1,y1,x2,y2);
+						
+						std::cout<<mainBoard.getState(true)<<"\n";
+						
+						// black moves
+						std::cout<<"\nBlack moves\n";
+						
+						// make black move here.
+						// get all black pieces
+						auto vBlackPiece = mainBoard.getAllPieces(BLACK);
+						std::cout<<"Black has "<<vBlackPiece->size()<<" pieces.\n";
+						
+						std::cout<<"Printing all black pieces:\n";
+						if (vBlackPiece == 0)
+						{
+							std::cout<<"Error: No black pieces found.\n";
+							return 0;
+						}
+						for (int i2=0;i2<vBlackPiece->size();++i2)
+						{
+							std::cout<<(*vBlackPiece)(i2)->getName()<<"\n";
+						}
+						
+						Vector <Board*> * vBlackMoves = new Vector <Board*>;
+						//Vector <Board*> * vMoves;
+						// get all moves for all black pieces
+						for (int i2=0;i2<vBlackPiece->size();++i2)
+						{
+							std::cout<<"Generating moves for piece: "<<(*vBlackPiece)(i2)->getName()<<"\n";
+							mainBoard.addAllMovesFrom((*vBlackPiece)(i2),vBlackMoves);
+						}
+						std::cout<<"Found "<<vBlackMoves->size()<<" moves.\n";
+						
+						for(int i2=0;i2<vBlackMoves->size();++i2)
+						{
+							std::cout<<(*vBlackMoves)(i2)->getState()<<"\n";
+						}
+						
+						// pick a random state.
+						std::cout<<"Picking random move.\n";
+						
+						if (vBlackMoves->size() == 0)
+						{
+							std::cout<<"Error: No black moves found.\n";
+							return 0;
+						}
+						int randMove = rng.rand(vBlackMoves->size());
+						
+						
+						//mainBoard = (*vBlackMoves)(randMove);
+						
+						++i;
 					}
 				}
 				else
