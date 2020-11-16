@@ -8,9 +8,11 @@ class Piece
 	bool isPromoted;
 	bool team;
 	
+	int materialValue;
+	
 	int x,y;
 
-	Piece(std::string _name, unsigned char _shortName, bool _team, int _x, int _y)
+	Piece(std::string _name, unsigned char _shortName, bool _team, int _x, int _y, int _materialValue)
 	{
 		name = _name;
 		shortName = _shortName;
@@ -19,6 +21,7 @@ class Piece
 		team=_team;
 		x=_x;
 		y=_y;
+		materialValue=_materialValue;
 	}
 	std::string getName()
 	{

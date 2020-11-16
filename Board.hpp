@@ -52,7 +52,7 @@ class Board
 	
 	Board()
 	{
-		std::cout<<"Board const\n";
+		//std::cout<<"Board const\n";
 		
 		sideToMove=WHITE;
 		// wipe the board array
@@ -67,7 +67,7 @@ class Board
 				aBoard[x][y] = 0;
 			}
 		}
-		std::cout<<"End board const\n";
+		//std::cout<<"End board const\n";
 		
 		rng.seed(time(NULL));
 	}
@@ -148,7 +148,7 @@ class Board
 
 	void reset()
 	{
-		std::cout<<"Resetting board\n";
+		//std::cout<<"Resetting board\n";
 		sideToMove=WHITE;
 		
 		// wipe the board
@@ -162,28 +162,28 @@ class Board
 		
 		for (int i=0;i<8;++i)
 		{
-			aBoard[i][1] = new Piece ("pawn", 244, WHITE, i, 1);
-			aBoard[i][6] = new Piece("pawn", 245, BLACK, i, 6);
+			aBoard[i][1] = new Piece ("pawn", 244, WHITE, i, 1, 1);
+			aBoard[i][6] = new Piece("pawn", 245, BLACK, i, 6, 1);
 		}
-		aBoard[0][0] = new Piece ("rook", 'r', WHITE, 0,0);
-		aBoard[7][0] = new Piece ("rook", 'r', WHITE, 7,0);
-		aBoard[0][7] = new Piece ("rook", 'R', BLACK, 0,7);
-		aBoard[7][7] = new Piece ("rook", 'R', BLACK, 7,7);
+		aBoard[0][0] = new Piece ("rook", 'r', WHITE, 0,0,5);
+		aBoard[7][0] = new Piece ("rook", 'r', WHITE, 7,0,5);
+		aBoard[0][7] = new Piece ("rook", 'R', BLACK, 0,7,5);
+		aBoard[7][7] = new Piece ("rook", 'R', BLACK, 7,7,5);
 		
-		aBoard[1][0] = new Piece ("knight", 'n', WHITE, 1,0);
-		aBoard[6][0] = new Piece ("knight", 'n', WHITE, 6,0);
-		aBoard[1][7] = new Piece ("knight", 'N', BLACK, 1,7);
-		aBoard[6][7] = new Piece ("knight", 'N', BLACK, 6,7);
+		aBoard[1][0] = new Piece ("knight", 'n', WHITE, 1,0,3);
+		aBoard[6][0] = new Piece ("knight", 'n', WHITE, 6,0,3);
+		aBoard[1][7] = new Piece ("knight", 'N', BLACK, 1,7,3);
+		aBoard[6][7] = new Piece ("knight", 'N', BLACK, 6,7,3);
 		
-		aBoard[2][0] = new Piece ("bishop", 'b', WHITE, 2,0);
-		aBoard[5][0] = new Piece ("bishop", 'b', WHITE, 5,0);
-		aBoard[2][7] = new Piece ("bishop", 'B', BLACK, 2,7);
-		aBoard[5][7] = new Piece ("bishop", 'B', BLACK, 5,7);
+		aBoard[2][0] = new Piece ("bishop", 'b', WHITE, 2,0,3);
+		aBoard[5][0] = new Piece ("bishop", 'b', WHITE, 5,0,3);
+		aBoard[2][7] = new Piece ("bishop", 'B', BLACK, 2,7,3);
+		aBoard[5][7] = new Piece ("bishop", 'B', BLACK, 5,7,3);
 		
-		aBoard[3][0] = new Piece ("queen", 'q', WHITE, 3,0);
-		aBoard[4][0] = new Piece ("king", 'k', WHITE, 4,0);
-		aBoard[3][7] = new Piece ("queen", 'Q', BLACK, 3,7);
-		aBoard[4][7] = new Piece ("king", 'K', BLACK, 4,7);
+		aBoard[3][0] = new Piece ("queen", 'q', WHITE, 3,0,9);
+		aBoard[4][0] = new Piece ("king", 'k', WHITE, 4,0,1000);
+		aBoard[3][7] = new Piece ("queen", 'Q', BLACK, 3,7,9);
+		aBoard[4][7] = new Piece ("king", 'K', BLACK, 4,7,1000);
 	}
 	
 	// Return all states for this side.
@@ -1168,7 +1168,7 @@ class Board
 		}
 		
 		// pick a random state.
-		std::cout<<"Picking random move.\n";
+		//std::cout<<"Picking random move.\n";
 		
 		if (vMove->size() == 0)
 		{
@@ -1182,6 +1182,83 @@ class Board
 		return false;
 	}
 	
+	// Pick the best immediate move to reduce enemy material score.
+	bool materialMove(bool _team)
+	{
+		std::string strTeam = "";
+		if (_team == WHITE)
+		{
+			std::cout<<"*** Material move: WHITE ***\n";
+			strTeam = "white";
+		}
+		else if (_team == BLACK)
+		{
+			std::cout<<"*** Material move: BLACK ***\n";
+			strTeam = "black";
+		}
+		
+		// get all movable pieces
+		auto vPiece = getAllPieces(_team);
+
+		if (vPiece == 0)
+		{
+			std::cout<<"Error: No pieces found.\n";
+			return false;
+		}
+		
+		Vector <Board*> * vMove = new Vector <Board*>;
+		// get all moves for all pieces
+		for (int i2=0;i2<vPiece->size();++i2)
+		{
+			addAllMovesFrom((*vPiece)(i2),vMove);
+		}
+		std::cout<<"Found "<<vMove->size()<<" moves.\n";
+		
+		// pick move which lowers opponent's score the most.
+		
+		int currentOpponentScore = getMaterialScore(!_team);
+		Board* bestState = 0;
+		
+		if (vMove->size() == 0)
+		{
+			std::cout<<"Error: No "<<strTeam<<" moves found.\n";
+			return false;
+		}
+		
+		
+		int lowestScore = 9999;
+		int bestIndex = -1;
+		for (int i=0;i<vMove->size();++i)
+		{
+			if ( (*vMove)(i)->getMaterialScore(!_team) < lowestScore)
+			{
+				lowestScore = (*vMove)(i)->getMaterialScore(!_team);
+				bestIndex = i;
+			}
+			else if ( (*vMove)(i)->getMaterialScore(!_team) == lowestScore
+			 && rng.flip())
+			{
+				//lowestScore = (*vMove)(i)->getMaterialScore(!_team);
+				bestIndex = i;
+			}
+		}
+		
+		if (bestIndex != -1)
+		{
+			*this = *(*vMove)(bestIndex);
+		}
+		return false;
+	}
+	
+	
+	// 0000 0000
+	// 1000 0000 - WHITE check
+	// 1100 0000 - WHITE checkmate
+	// 0100 0000 - WHITE stalemate
+	// 0000 1000 - BLACK check
+	// 0000 1100 - BLACK checkmate
+	// 0000 0100 - BLACK stalemate
+	
 	char boardStatus()
 	{
 		// need to check
@@ -1190,6 +1267,23 @@ class Board
 		// stalemate
 		// promotion...
 		return 0;
+	}
+	
+	// calculate the score for this board state based on material.
+	int getMaterialScore(bool _team)
+	{
+		int score = 0;
+		
+		// get all movable pieces
+		auto vPiece = getAllPieces(_team);
+		
+		// sum material value
+		for (auto const& element : *vPiece)
+		{
+			score += element->materialValue;
+		}
+
+		return score;
 	}
 	
 	bool hasKing(bool _team)

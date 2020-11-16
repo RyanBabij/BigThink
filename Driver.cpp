@@ -12,7 +12,7 @@
 // assume always promotion to queen
 
 // idea: use tree to come up with move sets.
-// use neural net to decide which states are best.
+// use neural net to decide which states are best aka positional play
 // however to start out we can use simple material points system.
 
 #include <Container/Vector/Vector.hpp>
@@ -39,39 +39,39 @@ int main (int narg, char ** arg)
 	Board mainBoard;
 	mainBoard.reset();
 
-	std::cout<<"Board state:\n"<<mainBoard.getState()<<"\n\n";
+	//std::cout<<"Board state:\n"<<mainBoard.getState()<<"\n\n";
 	
 	// get all white pieces
-	auto vPiece = mainBoard.getAllPieces(WHITE);
-	std::cout<<"White has "<<vPiece->size()<<" pieces.\n";
+	//auto vPiece = mainBoard.getAllPieces(WHITE);
+	//std::cout<<"White has "<<vPiece->size()<<" pieces.\n";
 	
-	std::cout<<"Printing all white pieces:\n";
-	if (vPiece == 0)
-	{
-		std::cout<<"Error: No white pieces found.\n";
-		return 0;
-	}
-	for (int i=0;i<vPiece->size();++i)
-	{
-		std::cout<<(*vPiece)(i)->getName()<<"\n";
-	}
+	//std::cout<<"Printing all white pieces:\n";
+	// if (vPiece == 0)
+	// {
+		// //std::cout<<"Error: No white pieces found.\n";
+		// return 0;
+	// }
+	// for (int i=0;i<vPiece->size();++i)
+	// {
+		// //std::cout<<(*vPiece)(i)->getName()<<"\n";
+	// }
 	
-	Vector <Board*> * vMoves = new Vector <Board*>;
-	//Vector <Board*> * vMoves;
-	// get all moves for all white pieces
-	for (int i=0;i<vPiece->size();++i)
-	{
-		std::cout<<"Generating moves for piece: "<<(*vPiece)(i)->getName()<<"\n";
+	// Vector <Board*> * vMoves = new Vector <Board*>;
+	// //Vector <Board*> * vMoves;
+	// // get all moves for all white pieces
+	// for (int i=0;i<vPiece->size();++i)
+	// {
+		// //std::cout<<"Generating moves for piece: "<<(*vPiece)(i)->getName()<<"\n";
 
-		//Vector <Board*> * vMoves = mainBoard.getAllMovesFrom((*vPiece)(i));
-		mainBoard.addAllMovesFrom((*vPiece)(i),vMoves);
-	}
-	std::cout<<"Found "<<vMoves->size()<<" moves.\n";
+		// //Vector <Board*> * vMoves = mainBoard.getAllMovesFrom((*vPiece)(i));
+		// //mainBoard.addAllMovesFrom((*vPiece)(i),vMoves);
+	// }
+	// std::cout<<"Found "<<vMoves->size()<<" moves.\n";
 	
-	for(int i=0;i<vMoves->size();++i)
-	{
-		std::cout<<(*vMoves)(i)->getState()<<"\n";
-	}
+	// for(int i=0;i<vMoves->size();++i)
+	// {
+		// //std::cout<<(*vMoves)(i)->getState()<<"\n";
+	// }
 	
 	// pick a random state.
 	//mainBoard.pickRandomSub();
@@ -81,6 +81,11 @@ int main (int narg, char ** arg)
 		// std::cout<<"Turn: "<<i<<"\n";
 		// std::cout<<mainBoard.getState()<<"\n";
 	// }
+	
+	std::cout<<"\n\nBigThink chess engine\n";
+	std::cout<<"Enter 4 digits to make move.\n";
+	std::cout<<" a - let AI move\n";
+	std::cout<<" b - let AI play full game\n";
 	
 	int currentTurn=0;
 	while(++currentTurn<100)
@@ -128,9 +133,12 @@ int main (int narg, char ** arg)
 		if (input.find('b') != std::string::npos)
 		{
 			// play entire game until somebody wins
+			int i=1;
 			while (true)
 			{
-				mainBoard.randomMove(WHITE);
+				std::cout<<"\n\nTurn: "<<i++<<"\n";
+				//mainBoard.randomMove(WHITE);
+				mainBoard.materialMove(WHITE);
 				// analysis
 				std::cout<<mainBoard.getState(true)<<"\n";
 				
@@ -140,7 +148,10 @@ int main (int narg, char ** arg)
 					return 0;
 				}
 				
-				mainBoard.randomMove(BLACK);
+				std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
+				
+				//mainBoard.randomMove(BLACK);
+				mainBoard.materialMove(BLACK);
 				
 				std::cout<<mainBoard.getState(true)<<"\n";
 				
@@ -149,6 +160,8 @@ int main (int narg, char ** arg)
 					std::cout<<"Black wins\n";
 					return 0;
 				}
+				
+				std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
 			}
 		}
 		
