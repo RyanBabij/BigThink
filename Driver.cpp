@@ -125,18 +125,57 @@ int main (int narg, char ** arg)
 		}
 		
 		// process input here.
+		if (input.find('b') != std::string::npos)
+		{
+			// play entire game until somebody wins
+			while (true)
+			{
+				mainBoard.randomMove(WHITE);
+				// analysis
+				std::cout<<mainBoard.getState(true)<<"\n";
+				
+				if ( mainBoard.hasKing(BLACK)==false )
+				{
+					std::cout<<"White wins\n";
+					return 0;
+				}
+				
+				mainBoard.randomMove(BLACK);
+				
+				std::cout<<mainBoard.getState(true)<<"\n";
+				
+				if ( mainBoard.hasKing(WHITE)==false )
+				{
+					std::cout<<"Black wins\n";
+					return 0;
+				}
+			}
+		}
+		
 		if (input.find('a') != std::string::npos)
 		{
 			std::cout<<"AI turn\n";
 			
 			mainBoard.randomMove(WHITE);
 			// analysis
-			
 			std::cout<<mainBoard.getState(true)<<"\n";
+			
+			if ( mainBoard.hasKing(BLACK)==false )
+			{
+				std::cout<<"White wins\n";
+				return 0;
+			}
 			
 			mainBoard.randomMove(BLACK);
 			
 			std::cout<<mainBoard.getState(true)<<"\n";
+			
+			if ( mainBoard.hasKing(WHITE)==false )
+			{
+				std::cout<<"Black wins\n";
+				return 0;
+			}
+			
 		}
 		else
 		{
