@@ -18,6 +18,8 @@
 #include <Container/Vector/Vector.hpp>
 #include <Math/Random/RandomLehmer.hpp>
 
+#include <Data/DataTools.hpp>
+
 #include <iostream>
 #include <string>
 #include <time.h>
@@ -32,7 +34,6 @@ RandomLehmer rng;
 
 int main (int narg, char ** arg)
 {
-
 	rng.seed(time(NULL));
 	
 	Board mainBoard;
@@ -81,21 +82,32 @@ int main (int narg, char ** arg)
 		// std::cout<<mainBoard.getState()<<"\n";
 	// }
 	
-	int i=0;
-	while(++i<100)
+	int currentTurn=0;
+	while(++currentTurn<100)
 	{
 		int x1=-1;
 		int y1=-1;
 		int x2=-1;
 		int y2=-1;
-
-		std::cout<<"Turn: "<<i<<"\n";
-		std::cout<<mainBoard.getState(true)<<"\n";
 		
-		std::cout<<"Which piece to move?\n";
-		std::cin >> x1 >> y1;
-		std::cout<<"Where to move it?\n";
-		std::cin >> x2 >> y2;
+		std::string input;
+
+		std::cout<<"Turn: "<<currentTurn<<"\n";
+		std::cout<<mainBoard.getState(true)<<"\n";
+		//std::cout<<"Press enter to continue.\n";
+		//std::cin.get();
+		//std::cout<<"Which piece to move? (Enter 9 for AI move).\n";
+		//std::cin >> x1 >> y1;
+		//std::cout<<"Where to move it?\n";
+		//std::cin >> x2 >> y2;
+		
+		// command options
+		// a - AI turn
+		// b - full AI vs AI game
+		// [4 digits from 0-7] - make move if valid.
+		
+		std::cout<<"Enter command:\n";
+		std::cin>>input;
 		
 		while (std::cin.fail())
 		{
@@ -103,96 +115,116 @@ int main (int narg, char ** arg)
 			std::cin.clear();
 			std::cin.ignore();
 			
-			x1=-1;
-			y1=-1;
-			x2=-1;
-			y2=-1;
-			--i;
+			input = "";
+			
+			// x1=-1;
+			// y1=-1;
+			// x2=-1;
+			// y2=-1;
+			--currentTurn;
 		}
 		
-		if ( mainBoard.isSafe(x1,y1) )
+		// process input here.
+		if (input.find('a') != std::string::npos)
 		{
-			if (mainBoard.isSafe(x2,y2))
-			{
-				std::cout<<"Command. Move "<<x1<<", "<<y1<<" to "<<x2<<", "<<y2<<"\n";
-				
-				if ( mainBoard.aBoard[x1][y1] != 0)
-				{
-					if ( x1==x2 && y1==y2 )
-					{
-						std::cout<<"Error: Cannot move to same position.\n";
-					}
-					else
-					{
-						// move the piece
-						mainBoard.move(x1,y1,x2,y2);
-						
-						std::cout<<mainBoard.getState(true)<<"\n";
-						
-						// black moves
-						std::cout<<"\nBlack moves\n";
-						
-						// make black move here.
-						// get all black pieces
-						auto vBlackPiece = mainBoard.getAllPieces(BLACK);
-						std::cout<<"Black has "<<vBlackPiece->size()<<" pieces.\n";
-						
-						std::cout<<"Printing all black pieces:\n";
-						if (vBlackPiece == 0)
-						{
-							std::cout<<"Error: No black pieces found.\n";
-							return 0;
-						}
-						for (int i2=0;i2<vBlackPiece->size();++i2)
-						{
-							std::cout<<(*vBlackPiece)(i2)->getName()<<"\n";
-						}
-						
-						Vector <Board*> * vBlackMoves = new Vector <Board*>;
-						//Vector <Board*> * vMoves;
-						// get all moves for all black pieces
-						for (int i2=0;i2<vBlackPiece->size();++i2)
-						{
-							std::cout<<"Generating moves for piece: "<<(*vBlackPiece)(i2)->getName()<<"\n";
-							mainBoard.addAllMovesFrom((*vBlackPiece)(i2),vBlackMoves);
-						}
-						std::cout<<"Found "<<vBlackMoves->size()<<" moves.\n";
-						
-						for(int i2=0;i2<vBlackMoves->size();++i2)
-						{
-							std::cout<<(*vBlackMoves)(i2)->getState()<<"\n";
-						}
-						
-						// pick a random state.
-						std::cout<<"Picking random move.\n";
-						
-						if (vBlackMoves->size() == 0)
-						{
-							std::cout<<"Error: No black moves found.\n";
-							return 0;
-						}
-						int randMove = rng.rand(vBlackMoves->size());
-						
-						
-						mainBoard = *(*vBlackMoves)(randMove);
-						
-						++i;
-					}
-				}
-				else
-				{
-					std::cout<<"Error: Nothing there to move.\n";
-				}
-			}
-			else
-			{
-				std::cout<<"Error: Bad move coordinate.\n";
-			}
+			std::cout<<"AI turn\n";
+			
+			mainBoard.randomMove(WHITE);
+			// analysis
+			
+			std::cout<<mainBoard.getState(true)<<"\n";
+			
+			mainBoard.randomMove(BLACK);
+			
+			std::cout<<mainBoard.getState(true)<<"\n";
 		}
 		else
 		{
-			std::cout<<"Error: Bad start coordinate.\n";
+			// process normally.
+			// strip the first 4 numbers we find in the string.
+			// valid input is 4 numbers from 0-7. Anything else is ignored.
+			int digits[4]={-1};
+			
+			int currentDigit = 0;
+			for (unsigned int i=0;i<input.size();++i)
+			{
+				if (std::isdigit(input[i]))
+				{
+					int digit = DataTools::toInt(input[i]);
+					
+					if (digit >= 0 && digit < 8)
+					{
+						digits[currentDigit] = DataTools::toInt(input[i]);
+						++currentDigit;
+					}
+					if (currentDigit==4)
+					{
+						break;
+					}
+				}
+			}
+			
+			// process digits
+			if (currentDigit == 4)
+			{
+				std::cout<<"Valid input: \n";
+				std::cout<<digits[0]<<digits[1]<<digits[2]<<digits[3]<<"\n";
+				x1=digits[0];
+				y1=digits[1];
+				x2=digits[2];
+				y2=digits[3];
+			}
+			else
+			{
+				std::cout<<"Error: Invalid input.\n";
+			}
 		}
+		
+		// if ( mainBoard.isSafe(x1,y1) )
+		// {
+			// if (mainBoard.isSafe(x2,y2))
+			// {
+				// std::cout<<"Command. Move "<<x1<<", "<<y1<<" to "<<x2<<", "<<y2<<"\n";
+				
+				// if ( mainBoard.aBoard[x1][y1] != 0)
+				// {
+					// if ( x1==x2 && y1==y2 )
+					// {
+						// std::cout<<"Error: Cannot move to same position.\n";
+					// }
+					// else
+					// {
+						// // move the piece
+						// mainBoard.move(x1,y1,x2,y2);
+						
+						// std::cout<<mainBoard.getState(true)<<"\n";
+						
+						// // black moves
+						// std::cout<<"\nBlack moves\n";
+						
+						// mainBoard.randomMove(BLACK);
+						
+						// ++currentTurn;
+					// }
+				// }
+				// else
+				// {
+					// std::cout<<"Error: Nothing there to move.\n";
+				// }
+			// }
+			// else
+			// {
+				// std::cout<<"Error: Bad move coordinate.\n";
+			// }
+		// }
+		// else if (x1 == 9)
+		// {
+			// std::cout<<"Ai move\n";
+		// }
+		// else
+		// {
+			// std::cout<<"Error: Bad start coordinate.\n";
+		// }
 	}
 	
 	return 0;

@@ -1,7 +1,7 @@
 class Piece
 {
 	std::string name;
-	char shortName;
+	unsigned char shortName;
 
 	public:
 	bool hasMoved;
@@ -10,7 +10,7 @@ class Piece
 	
 	int x,y;
 
-	Piece(std::string _name, char _shortName, bool _team, int _x, int _y)
+	Piece(std::string _name, unsigned char _shortName, bool _team, int _x, int _y)
 	{
 		name = _name;
 		shortName = _shortName;
@@ -24,7 +24,7 @@ class Piece
 	{
 		return name;
 	}
-	char getShortName()
+	unsigned char getShortName()
 	{
 		return shortName;
 	}

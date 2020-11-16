@@ -1,15 +1,22 @@
+#include <Math/Random/RandomLehmer.hpp>
+
+#include <time.h>
+
+#define WHITE true
+#define BLACK false
+
 class Board
 {
 	// 0 = empty space
 	
-	// p = white pawn
+	// 244 = white pawn
 	// r = white rook
 	// n = white knight
 	// b = white bishop
 	// q = white queen
 	// k = white king
 	
-	// P = black pawn
+	// 245 = black pawn
 	// R = black rook
 	// N = black knight
 	// B = black bishop
@@ -19,6 +26,8 @@ class Board
 	bool sideToMove;
 	
 	Vector <Board*> vSubstates;
+	
+	RandomLehmer rng;
 	
 	
 	public:
@@ -59,6 +68,8 @@ class Board
 			}
 		}
 		std::cout<<"End board const\n";
+		
+		rng.seed(time(NULL));
 	}
 	Board(const Board& board) // copy constructor 
 	{
@@ -151,8 +162,8 @@ class Board
 		
 		for (int i=0;i<8;++i)
 		{
-			aBoard[i][1] = new Piece ("pawn", 'p', WHITE, i, 1);
-			aBoard[i][6] = new Piece("pawn", 'b', BLACK, i, 6);
+			aBoard[i][1] = new Piece ("pawn", 244, WHITE, i, 1);
+			aBoard[i][6] = new Piece("pawn", 245, BLACK, i, 6);
 		}
 		aBoard[0][0] = new Piece ("rook", 'r', WHITE, 0,0);
 		aBoard[7][0] = new Piece ("rook", 'r', WHITE, 7,0);
@@ -207,7 +218,7 @@ class Board
 		}
 	
 		// white pawn, can move up 1 space, attack diagonally.
-		if (piece->getShortName() == 'p')
+		if (piece->getShortName() == 244)
 		{
 			// can it move up 1 space?
 			if (isSafe(piece->x,piece->y+1))
@@ -217,7 +228,7 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x,piece->y+1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 					
 					// can it move up 2 spaces?
@@ -228,7 +239,7 @@ class Board
 							// piece can move up 1 space. Make state for this.
 							Board* subBoard2 = new Board(*this);
 							subBoard2->move(piece->x,piece->y,piece->x,piece->y+2);
-							std::cout<<"adding move\n";
+							//std::cout<<"adding move\n";
 							vBoard->push(subBoard2);
 						}
 					}
@@ -244,7 +255,7 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x-1,piece->y+1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
@@ -256,13 +267,13 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x-1,piece->y+1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
 		}
-		// black bawn, can move down 1 space, attack diagonally.
-		if (piece->getShortName() == 'b')
+		// black pawn, can move down 1 space, attack diagonally.
+		if (piece->getShortName() == 245)
 		{
 			// can it move up 1 space?
 			if (isSafe(piece->x,piece->y-1))
@@ -272,7 +283,7 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x,piece->y-1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 					
 					// can it move up 2 spaces?
@@ -283,7 +294,7 @@ class Board
 							// piece can move up 1 space. Make state for this.
 							Board* subBoard2 = new Board(*this);
 							subBoard2->move(piece->x,piece->y,piece->x,piece->y-2);
-							std::cout<<"adding move\n";
+							//std::cout<<"adding move\n";
 							vBoard->push(subBoard2);
 						}
 					}
@@ -299,7 +310,7 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x-1,piece->y-1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
@@ -311,7 +322,7 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x-1,piece->y-1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
@@ -321,7 +332,7 @@ class Board
 		// knight, moves in L shape
 		if (piece->getShortName() == 'n' || piece->getShortName() == 'N')
 		{
-			std::cout<<"checking knight\n";
+			//std::cout<<"checking knight\n";
 			// left
 			if (isSafe(piece->x-2,piece->y+1))
 			{
@@ -330,7 +341,7 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x-2,piece->y+1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
@@ -341,7 +352,7 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x-2,piece->y-1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
@@ -353,7 +364,7 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x+2,piece->y+1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
@@ -364,20 +375,20 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x+2,piece->y-1);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
 			// up
 			if (isSafe(piece->x+1,piece->y+2))
 			{
-				std::cout<<"safe\n";
+				//std::cout<<"safe\n";
 				if ( aBoard[piece->x+1][piece->y+2] == 0 || aBoard[piece->x+1][piece->y+2]->team != piece->team )
 				{
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x+1,piece->y+2);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
@@ -388,20 +399,20 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x-1,piece->y+2);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
 			// down
 			if (isSafe(piece->x+1,piece->y-2))
 			{
-				std::cout<<"safe\n";
+				//std::cout<<"safe\n";
 				if ( aBoard[piece->x+1][piece->y-2] == 0 || aBoard[piece->x+1][piece->y-2]->team != piece->team )
 				{
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x+1,piece->y-2);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
@@ -412,7 +423,7 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x-1,piece->y-2);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 			}
@@ -423,14 +434,14 @@ class Board
 		if (piece->getShortName() == 'r' || piece->getShortName() == 'R')
 		{
 			// down
-			for (int file = piece->x-1; file >=0; --file)
+			for (int file = piece->y-1; file >=0; --file)
 			{
 				if ( aBoard[piece->x][file] == 0 )
 				{
 					// rook can move here and further
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x,file);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 				else if (aBoard[piece->x][file]->team != piece->team)
@@ -438,7 +449,7 @@ class Board
 					// enemy piece here, can move here but no further
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x,file);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 					break;
 				}
@@ -449,14 +460,14 @@ class Board
 				}
 			}
 			// up
-			for (int file = piece->x+1; file<8; ++file)
+			for (int file = piece->y+1; file<8; ++file)
 			{
 				if ( aBoard[piece->x][file] == 0 )
 				{
 					// rook can move here and further
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x,file);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
 				else if (aBoard[piece->x][file]->team != piece->team)
@@ -464,7 +475,7 @@ class Board
 					// enemy piece here, can move here but no further
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x,file);
-					std::cout<<"adding move\n";
+					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 					break;
 				}
@@ -475,7 +486,584 @@ class Board
 				}
 			}
 			// left
+			for (int rank = piece->x-1; rank >=0; --rank)
+			{
+				if ( aBoard[rank][piece->y] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,piece->y);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][piece->y]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,rank);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+			}
+			// // right
+			for (int rank = piece->x+1; rank <8; ++rank)
+			{
+				if ( aBoard[rank][piece->y] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,piece->y);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][piece->y]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,rank);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+			}
+		}
+		
+		// bishop, moves in diagonals
+		if (piece->getShortName() == 'B' || piece->getShortName() == 'b')
+		{
+			// down-left
+			int file = piece->y-1;
+			int rank = piece->x-1;
+			
+			while (file>=0 && rank >= 0)
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+				--file;
+				--rank;
+			}
+			// down-right
+			file = piece->y-1;
+			rank = piece->x+1;
+			
+			while (file>=0 && rank <8)
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+				--file;
+				++rank;
+			}
+			// up-left
+			file = piece->y+1;
+			rank = piece->x-1;
+			
+			while (file<8 && rank>=0)
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+				++file;
+				--rank;
+			}
+			// up-right
+			file = piece->y+1;
+			rank = piece->x+1;
+			
+			while (file<8 && rank<8)
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+				++file;
+				++rank;
+			}
+		}
+		
+		// queen, moves in diagonals and straight lines
+		if (piece->getShortName() == 'Q' || piece->getShortName() == 'q')
+		{
+			// down-left
+			int file = piece->y-1;
+			int rank = piece->x-1;
+			
+			while (file>=0 && rank >= 0)
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+				--file;
+				--rank;
+			}
+			// down-right
+			file = piece->y-1;
+			rank = piece->x+1;
+			
+			while (file>=0 && rank <8)
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+				--file;
+				++rank;
+			}
+			// up-left
+			file = piece->y+1;
+			rank = piece->x-1;
+			
+			while (file<8 && rank>=0)
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+				++file;
+				--rank;
+			}
+			// up-right
+			file = piece->y+1;
+			rank = piece->x+1;
+			
+			while (file<8 && rank<8)
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+				++file;
+				++rank;
+			}
+			// down
+			for (file = piece->y-1; file >=0; --file)
+			{
+				if ( aBoard[piece->x][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[piece->x][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+			}
+			// up
+			for (file = piece->y+1; file<8; ++file)
+			{
+				if ( aBoard[piece->x][file] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[piece->x][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,file);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+			}
+			// left
+			for (rank = piece->x-1; rank >=0; --rank)
+			{
+				if ( aBoard[rank][piece->y] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,piece->y);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][piece->y]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,rank);
+					//std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+			}
+			// // right
+			for (rank = piece->x+1; rank <8; ++rank)
+			{
+				if ( aBoard[rank][piece->y] == 0 )
+				{
+					// rook can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,piece->y);
+					////std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][piece->y]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x,rank);
+					////std::cout<<"adding move\n";
+					vBoard->push(subBoard);
+					break;
+				}
+				else
+				{
+					// cannot move here
+					break;
+				}
+			}
+		}
+		
+		// king, moves in diagonals and straight lines but only 1 tile
+		if (piece->getShortName() == 'K' || piece->getShortName() == 'k')
+		{
+			// down-left
+			int rank = piece->x-1;
+			int file = piece->y-1;
+			if (isSafe(rank,file))
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// piece can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+			}
+			// down-right
+			rank = piece->x+1;
+			file = piece->y-1;
+			if (isSafe(rank,file))
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// piece can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+			}
+			// up-left
+			rank = piece->x-1;
+			file = piece->y+1;
+			if (isSafe(rank,file))
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// piece can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+			}
+			// up-right
+			rank = piece->x+1;
+			file = piece->y+1;
+			if (isSafe(rank,file))
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// piece can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+			}
+			// down
+			rank = piece->x;
+			file = piece->y-1;
+			if (isSafe(rank,file))
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// piece can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+			}
+			// up
+			rank = piece->x;
+			file = piece->y+1;
+			if (isSafe(rank,file))
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// piece can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+			}
+			// left
+			rank = piece->x-1;
+			file = piece->y;
+			if (isSafe(rank,file))
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// piece can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+			}
 			// right
+			rank = piece->x+1;
+			file = piece->y;
+			if (isSafe(rank,file))
+			{
+				if ( aBoard[rank][file] == 0 )
+				{
+					// piece can move here and further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+				else if (aBoard[rank][file]->team != piece->team)
+				{
+					// enemy piece here, can move here but no further
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,rank,file);
+					vBoard->push(subBoard);
+				}
+			}
 		}
 	}
 	
@@ -552,5 +1140,72 @@ class Board
 		}
 		
 		return vPieces;
+	}
+	
+	bool randomMove (bool _team)
+	{
+		std::string strTeam = "";
+		if (_team == WHITE)
+		{
+			std::cout<<"*** Random move: WHITE ***\n";
+			strTeam = "white";
+		}
+		else if (_team == BLACK)
+		{
+			std::cout<<"*** Random move: BLACK ***\n";
+			strTeam = "black";
+		}
+		
+		// get all movable pieces
+		auto vPiece = getAllPieces(_team);
+		//std::cout<<strTeam<<" has "<<vPiece->size()<<" pieces.\n";
+		
+		//std::cout<<"Printing all pieces:\n";
+		if (vPiece == 0)
+		{
+			std::cout<<"Error: No pieces found.\n";
+			return 0;
+		}
+		for (int i2=0;i2<vPiece->size();++i2)
+		{
+			//std::cout<<(*vPiece)(i2)->getName()<<"\n";
+		}
+		
+		Vector <Board*> * vMove = new Vector <Board*>;
+		// get all moves for all pieces
+		for (int i2=0;i2<vPiece->size();++i2)
+		{
+			//std::cout<<"Generating moves for piece: "<<(*vPiece)(i2)->getName()<<"\n";
+			addAllMovesFrom((*vPiece)(i2),vMove);
+		}
+		std::cout<<"Found "<<vMove->size()<<" moves.\n";
+		
+		for(int i2=0;i2<vMove->size();++i2)
+		{
+			//std::cout<<(*vMove)(i2)->getState()<<"\n";
+		}
+		
+		// pick a random state.
+		std::cout<<"Picking random move.\n";
+		
+		if (vMove->size() == 0)
+		{
+			std::cout<<"Error: No "<<strTeam<<" moves found.\n";
+			return 0;
+		}
+		int randMove = rng.rand(vMove->size());
+		
+		*this = *(*vMove)(randMove);
+			
+		return false;
+	}
+	
+	char boardStatus()
+	{
+		// need to check
+		// check
+		// checkmate
+		// stalemate
+		// promotion...
 	}
 };
