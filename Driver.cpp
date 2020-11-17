@@ -15,6 +15,8 @@
 // use neural net to decide which states are best aka positional play
 // however to start out we can use simple material points system.
 
+#include <File/FileManagerStatic.hpp>
+
 #include <Container/Vector/Vector.hpp>
 #include <Math/Random/RandomLehmer.hpp>
 
@@ -32,8 +34,10 @@ RandomLehmer rng;
 #include "Piece.hpp"
 #include "Board.hpp"
 
+
+
 int main (int narg, char ** arg)
-{
+{	
 	rng.seed(time(NULL));
 	
 	Board mainBoard;
@@ -82,6 +86,8 @@ int main (int narg, char ** arg)
 		// std::cout<<mainBoard.getState()<<"\n";
 	// }
 	
+	std::string gameLog = "";
+	
 	std::cout<<"\n\nBigThink chess engine\n";
 	std::cout<<"Enter 4 digits to make move.\n";
 	std::cout<<" a - let AI move\n";
@@ -96,8 +102,7 @@ int main (int narg, char ** arg)
 		int y2=-1;
 		
 		std::string input;
-
-		std::cout<<"Turn: "<<currentTurn<<"\n";
+		
 		std::cout<<mainBoard.getState(true)<<"\n";
 		//std::cout<<"Press enter to continue.\n";
 		//std::cin.get();
@@ -135,17 +140,19 @@ int main (int narg, char ** arg)
 			// play entire game until somebody wins
 			int i=1;
 			while (true)
-			{
+			{	
 				std::cout<<"\n\nTurn: "<<i++<<"\n";
+				gameLog+="\n\nTurn: "+DataTools::toString(i-1)+"\n\n";
 				//mainBoard.randomMove(WHITE);
 				mainBoard.materialMove(WHITE);
 				// analysis
 				std::cout<<mainBoard.getState(true)<<"\n";
+				gameLog+=mainBoard.getState(true)+"\n\n";
 				
 				if ( mainBoard.hasKing(BLACK)==false )
 				{
 					std::cout<<"White wins\n";
-					return 0;
+					break;
 				}
 				
 				std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
@@ -154,15 +161,21 @@ int main (int narg, char ** arg)
 				mainBoard.materialMove(BLACK);
 				
 				std::cout<<mainBoard.getState(true)<<"\n";
+				gameLog+=mainBoard.getState(true)+"\n\n";
 				
 				if ( mainBoard.hasKing(WHITE)==false )
 				{
 					std::cout<<"Black wins\n";
-					return 0;
+					break;
 				}
 				
 				std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
 			}
+			
+			// finished
+			std::cout<<"Writing game log\n";
+			FileManagerStatic::writeFreshString(gameLog,"gamelog.txt");
+			return 0;
 		}
 		
 		if (input.find('a') != std::string::npos)
