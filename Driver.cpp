@@ -143,8 +143,22 @@ int main (int narg, char ** arg)
 			{	
 				std::cout<<"\n\nTurn: "<<i++<<"\n";
 				gameLog+="\n\nTurn: "+DataTools::toString(i-1)+"\n\n";
+				
+				if ( mainBoard.boardStatus(WHITE) == 1 )
+				{
+					std::cout<<"White is in check/checkmate.\n";
+					gameLog+="White is in check/checkmate.\n";
+				}
+				
 				//mainBoard.randomMove(WHITE);
 				mainBoard.materialMove(WHITE);
+				
+				if ( mainBoard.boardStatus(WHITE) == 1 )
+				{
+					std::cout<<"White entered check/checkmate.\n";
+					gameLog+="White entered check/checkmate.\n";
+				}
+				
 				// analysis
 				std::cout<<mainBoard.getState(true)<<"\n";
 				gameLog+=mainBoard.getState(true)+"\n\n";
@@ -157,8 +171,20 @@ int main (int narg, char ** arg)
 				
 				std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
 				
+				if ( mainBoard.boardStatus(BLACK) == 1 )
+				{
+					std::cout<<"Black is in check/checkmate.\n";
+					gameLog+="Black is in check/checkmate.\n";
+				}
+				
 				//mainBoard.randomMove(BLACK);
 				mainBoard.materialMove(BLACK);
+				
+				if ( mainBoard.boardStatus(BLACK) == 1 )
+				{
+					std::cout<<"Black entered check/checkmate.\n";
+					gameLog+="Black entered check/checkmate.\n";
+				}
 				
 				std::cout<<mainBoard.getState(true)<<"\n";
 				gameLog+=mainBoard.getState(true)+"\n\n";

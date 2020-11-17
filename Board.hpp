@@ -1229,6 +1229,11 @@ class Board
 		return false;
 	}
 	
+	bool materialDepthMove(int depth)
+	{
+		return false;
+	}
+	
 	
 	// 0000 0000
 	// 1000 0000 - WHITE check
@@ -1238,13 +1243,37 @@ class Board
 	// 0000 1100 - BLACK checkmate
 	// 0000 0100 - BLACK stalemate
 	
-	char boardStatus()
+	char boardStatus(bool _team)
 	{
 		// need to check
 		// check
 		// checkmate
 		// stalemate
-		// promotion...
+		
+		Vector <Board*> * vMove = getAllMoves(!_team);
+		
+		for (int i=0;i<vMove->size();++i)
+		{
+			if ( (*vMove)(i)->hasKing(_team) == false )
+			{
+				std::cout<<"Found check\n";
+				// we are in check / checkmate
+				for (int i2=0;i2<vMove->size();++i2)
+				{
+					delete (*vMove)(i2);
+				}
+				vMove->clear();
+				
+				return 1;
+			}
+		}
+		
+		for (int i=0;i<vMove->size();++i)
+		{
+			delete (*vMove)(i);
+		}
+		vMove->clear();
+				
 		return 0;
 	}
 	
