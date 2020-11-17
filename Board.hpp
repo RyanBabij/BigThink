@@ -1192,24 +1192,23 @@ class Board
 		
 		// Store list of moves of equal score, so we can select on randomly
 		Vector <Board*> vBestMoves;
-		int lowestScore = 9999;
+		int bestScore = 0;
 		int bestIndex = -1;
 		int materialGap = 0;
 		for (int i=0;i<vMove->size();++i)
 		{
 			// calculate material gap.
+			materialGap = (*vMove)(i)->getMaterialScore(_team) - (*vMove)(i)->getMaterialScore(!_team);
 			
-			
-			if ( (*vMove)(i)->getMaterialScore(!_team) < lowestScore)
+			if ( bestIndex == -1 || materialGap > bestScore)
 			{
-				lowestScore = (*vMove)(i)->getMaterialScore(!_team);
+				bestScore = materialGap;
 				bestIndex = i;
 				vBestMoves.clear();
 				vBestMoves.push( (*vMove)(i) );
 			}
-			else if ( (*vMove)(i)->getMaterialScore(!_team) == lowestScore)
+			else if ( materialGap == bestScore)
 			{
-				//lowestScore = (*vMove)(i)->getMaterialScore(!_team);
 				bestIndex = i;
 				vBestMoves.push( (*vMove)(i) );
 			}
@@ -1217,10 +1216,7 @@ class Board
 		
 		if (bestIndex != -1)
 		{
-			//*this = *(*vMove)(bestIndex);
-			
-			*this = *vBestMoves( rng.rand(vBestMoves.size()-1) );
-			
+			*this = *vBestMoves( rng.rand(vBestMoves.size()-1) );		
 		}
 		
 		vBestMoves.clear();
