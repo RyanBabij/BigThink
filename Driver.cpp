@@ -27,10 +27,10 @@
 #define WHITE true
 #define BLACK false
 
+RandomLehmer rng;
+
 #include "Piece.hpp"
 #include "Board.hpp"
-
-RandomLehmer rng;
 
 int main (int narg, char ** arg)
 {

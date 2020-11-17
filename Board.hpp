@@ -5,6 +5,8 @@
 #define WHITE true
 #define BLACK false
 
+//RandomLehmer rng;
+
 class Board
 {
 	// 0 = empty space
@@ -24,10 +26,10 @@ class Board
 	// K = black king
 
 	bool sideToMove;
-	
 	Vector <Board*> vSubstates;
+
 	
-	RandomLehmer rng;
+	std::string transitionName;
 	
 	
 	public:
@@ -69,7 +71,11 @@ class Board
 		}
 		//std::cout<<"End board const\n";
 		
-		rng.seed(time(NULL));
+		//rng.seed(time(NULL));
+		
+		transitionName="";
+		
+		
 	}
 	Board(const Board& board) // copy constructor 
 	{
@@ -256,6 +262,7 @@ class Board
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x-1,piece->y+1);
 					//std::cout<<"adding move\n";
+					subBoard->transitionName="Pawn capture";
 					vBoard->push(subBoard);
 				}
 			}
@@ -266,10 +273,17 @@ class Board
 				{
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x-1,piece->y+1);
+					subBoard->move(piece->x,piece->y,piece->x+1,piece->y+1);
 					//std::cout<<"adding move\n";
+					subBoard->transitionName="Pawn capture";
 					vBoard->push(subBoard);
 				}
+			}
+			
+			// promote to queen if it reaches the end of the board.
+			if (piece->y == 7)
+			{
+				piece->promote();
 			}
 		}
 		// black pawn, can move down 1 space, attack diagonally.
@@ -321,10 +335,15 @@ class Board
 				{
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
-					subBoard->move(piece->x,piece->y,piece->x-1,piece->y-1);
+					subBoard->move(piece->x,piece->y,piece->x+1,piece->y-1);
 					//std::cout<<"adding move\n";
 					vBoard->push(subBoard);
 				}
+			}
+			// promote to queen if it reaches the end of the board.
+			if (piece->y == 0)
+			{
+				piece->promote();
 			}
 		}
 		
@@ -1183,6 +1202,8 @@ class Board
 	}
 	
 	// Pick the best immediate move to reduce enemy material score.
+	// Todo: We need to account for promotion aka material gain, therefore
+	// we should calculate material gap between teams.
 	bool materialMove(bool _team)
 	{
 		std::string strTeam = "";
@@ -1225,28 +1246,46 @@ class Board
 			return false;
 		}
 		
-		
+		// Store list of moves of equal score, so we can select on randomly
+		Vector <Board*> vBestMoves;
 		int lowestScore = 9999;
 		int bestIndex = -1;
+		int materialGap = 0;
 		for (int i=0;i<vMove->size();++i)
 		{
+			// calculate material gap.
+			
+			
 			if ( (*vMove)(i)->getMaterialScore(!_team) < lowestScore)
 			{
 				lowestScore = (*vMove)(i)->getMaterialScore(!_team);
 				bestIndex = i;
+				vBestMoves.clear();
+				vBestMoves.push( (*vMove)(i) );
 			}
-			else if ( (*vMove)(i)->getMaterialScore(!_team) == lowestScore
-			 && rng.flip())
+			else if ( (*vMove)(i)->getMaterialScore(!_team) == lowestScore)
 			{
 				//lowestScore = (*vMove)(i)->getMaterialScore(!_team);
 				bestIndex = i;
+				vBestMoves.push( (*vMove)(i) );
 			}
 		}
 		
 		if (bestIndex != -1)
 		{
-			*this = *(*vMove)(bestIndex);
+			//*this = *(*vMove)(bestIndex);
+			
+			*this = *vBestMoves( rng.rand(vBestMoves.size()-1) );
+			
 		}
+		
+		vBestMoves.clear();
+		
+		for (int i=0;i<vMove->size();++i)
+		{
+			delete (*vMove)(i);
+		}
+		
 		return false;
 	}
 	

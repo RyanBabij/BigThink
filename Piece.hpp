@@ -31,4 +31,19 @@ class Piece
 	{
 		return shortName;
 	}
+	void promote()
+	{
+		isPromoted=true;
+		name = "queen";
+		
+		if ( team == WHITE )
+		{
+			shortName='q';
+		}
+		else
+		{
+			shortName='Q';
+		}
+		materialValue=9;
+	}
 };
