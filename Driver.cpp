@@ -29,6 +29,19 @@
 #define WHITE true
 #define BLACK false
 
+#define WPAWN 244
+#define BPAWN 245
+#define WROOK 'r'
+#define BROOK 'R'
+#define WKNIGHT 'n'
+#define BKNIGHT 'N'
+#define WBISHOP 'b'
+#define BBISHOP 'B'
+#define WQUEEN 'q'
+#define BQUEEN 'Q'
+#define WKING 'k'
+#define BKING 'K'
+
 RandomLehmer rng;
 
 #include "Piece.hpp"
@@ -149,15 +162,26 @@ int main (int narg, char ** arg)
 					std::cout<<"White is in check/checkmate.\n";
 					gameLog+="White is in check/checkmate.\n";
 				}
-				
-				//mainBoard.randomMove(WHITE);
-				mainBoard.materialMove(WHITE);
-				
-				if ( mainBoard.boardStatus(WHITE) == 1 )
+				else if ( mainBoard.boardStatus(WHITE) == 2 )
 				{
-					std::cout<<"White entered check/checkmate.\n";
-					gameLog+="White entered check/checkmate.\n";
+					std::cout<<"Stalemate.\n";
+					gameLog+="Stalemate.\n";
+					return 0;
 				}
+				
+				if ( mainBoard.randomMove(WHITE) == false )
+				{
+					std::cout<<"White is unable to move.\n";
+					return 0;
+				}
+				//mainBoard.materialMove(WHITE);
+				//mainBoard.materialDepthMove(WHITE, 2);
+				
+				// if ( mainBoard.boardStatus(WHITE) == 1 )
+				// {
+					// std::cout<<"White entered check/checkmate.\n";
+					// gameLog+="White entered check/checkmate.\n";
+				// }
 				
 				// analysis
 				std::cout<<mainBoard.getState(true)<<"\n";
@@ -176,15 +200,26 @@ int main (int narg, char ** arg)
 					std::cout<<"Black is in check/checkmate.\n";
 					gameLog+="Black is in check/checkmate.\n";
 				}
-				
-				//mainBoard.randomMove(BLACK);
-				mainBoard.materialMove(BLACK);
-				
-				if ( mainBoard.boardStatus(BLACK) == 1 )
+				else if ( mainBoard.boardStatus(BLACK) == 2 )
 				{
-					std::cout<<"Black entered check/checkmate.\n";
-					gameLog+="Black entered check/checkmate.\n";
+					std::cout<<"Stalemate.\n";
+					gameLog+="Stalemate.\n";
+					return 0;
 				}
+				
+				if ( mainBoard.randomMove(BLACK) == false )
+				{
+					std::cout<<"Black is unable to move.\n";
+					return 0;
+				}
+				//mainBoard.materialMove(BLACK);
+				//mainBoard.materialDepthMove(BLACK,2);
+				
+				// if ( mainBoard.boardStatus(BLACK) == 1 )
+				// {
+					// std::cout<<"Black entered check/checkmate.\n";
+					// gameLog+="Black entered check/checkmate.\n";
+				// }
 				
 				std::cout<<mainBoard.getState(true)<<"\n";
 				gameLog+=mainBoard.getState(true)+"\n\n";

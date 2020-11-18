@@ -2,10 +2,7 @@
 
 #include <time.h>
 
-#define WHITE true
-#define BLACK false
 
-//RandomLehmer rng;
 
 class Board
 {
@@ -137,6 +134,22 @@ class Board
 		movePiece->x = x2;
 		movePiece->y = y2;
 		
+		//promotion
+		if ( movePiece->getShortName() == WPAWN )
+		{
+			if (movePiece->y == 7)
+			{
+				movePiece->promote();
+			}
+		}
+		else if ( movePiece->getShortName() == BPAWN )
+		{
+			if (movePiece->y == 0)
+			{
+				movePiece->promote();
+			}
+		}
+		
 		return true;
 	}
 
@@ -155,29 +168,29 @@ class Board
 		
 		for (int i=0;i<8;++i)
 		{
-			aBoard[i][1] = new Piece ("pawn", 244, WHITE, i, 1, 1);
-			aBoard[i][6] = new Piece("pawn", 245, BLACK, i, 6, 1);
+			aBoard[i][1] = new Piece ("pawn", WPAWN, WHITE, i, 1, 1);
+			aBoard[i][6] = new Piece("pawn", BPAWN, BLACK, i, 6, 1);
 		}
 		
-		aBoard[0][0] = new Piece ("rook", 'r', WHITE, 0,0,5);
-		aBoard[7][0] = new Piece ("rook", 'r', WHITE, 7,0,5);
-		aBoard[0][7] = new Piece ("rook", 'R', BLACK, 0,7,5);
-		aBoard[7][7] = new Piece ("rook", 'R', BLACK, 7,7,5);
+		aBoard[0][0] = new Piece ("rook", WROOK, WHITE, 0,0,5);
+		aBoard[7][0] = new Piece ("rook", WROOK, WHITE, 7,0,5);
+		aBoard[0][7] = new Piece ("rook", BROOK, BLACK, 0,7,5);
+		aBoard[7][7] = new Piece ("rook", BROOK, BLACK, 7,7,5);
 		
-		aBoard[1][0] = new Piece ("knight", 'n', WHITE, 1,0,3);
-		aBoard[6][0] = new Piece ("knight", 'n', WHITE, 6,0,3);
-		aBoard[1][7] = new Piece ("knight", 'N', BLACK, 1,7,3);
-		aBoard[6][7] = new Piece ("knight", 'N', BLACK, 6,7,3);
+		aBoard[1][0] = new Piece ("knight", WKNIGHT, WHITE, 1,0,3);
+		aBoard[6][0] = new Piece ("knight", WKNIGHT, WHITE, 6,0,3);
+		aBoard[1][7] = new Piece ("knight", BKNIGHT, BLACK, 1,7,3);
+		aBoard[6][7] = new Piece ("knight", BKNIGHT, BLACK, 6,7,3);
 		
-		aBoard[2][0] = new Piece ("bishop", 'b', WHITE, 2,0,3);
-		aBoard[5][0] = new Piece ("bishop", 'b', WHITE, 5,0,3);
-		aBoard[2][7] = new Piece ("bishop", 'B', BLACK, 2,7,3);
-		aBoard[5][7] = new Piece ("bishop", 'B', BLACK, 5,7,3);
+		aBoard[2][0] = new Piece ("bishop", WBISHOP, WHITE, 2,0,3);
+		aBoard[5][0] = new Piece ("bishop", WBISHOP, WHITE, 5,0,3);
+		aBoard[2][7] = new Piece ("bishop", BBISHOP, BLACK, 2,7,3);
+		aBoard[5][7] = new Piece ("bishop", BBISHOP, BLACK, 5,7,3);
 		
-		aBoard[3][0] = new Piece ("queen", 'q', WHITE, 3,0,9);
-		aBoard[4][0] = new Piece ("king", 'k', WHITE, 4,0,1000);
-		aBoard[3][7] = new Piece ("queen", 'Q', BLACK, 3,7,9);
-		aBoard[4][7] = new Piece ("king", 'K', BLACK, 4,7,1000);
+		aBoard[3][0] = new Piece ("queen", WQUEEN, WHITE, 3,0,9);
+		aBoard[4][0] = new Piece ("king", WKING, WHITE, 4,0,1000);
+		aBoard[3][7] = new Piece ("queen", BQUEEN, BLACK, 3,7,9);
+		aBoard[4][7] = new Piece ("king", BKING, BLACK, 4,7,1000);
 	}
 	
 	// only return all moves for this piece, in the form of state vector
@@ -258,12 +271,6 @@ class Board
 					vBoard->push(subBoard);
 				}
 			}
-			
-			// promote to queen if it reaches the end of the board.
-			if (piece->y == 7)
-			{
-				piece->promote();
-			}
 		}
 		// black pawn, can move down 1 space, attack diagonally.
 		if (piece->getShortName() == 245)
@@ -314,11 +321,6 @@ class Board
 					subBoard->move(piece->x,piece->y,piece->x+1,piece->y-1);
 					vBoard->push(subBoard);
 				}
-			}
-			// promote to queen if it reaches the end of the board.
-			if (piece->y == 0)
-			{
-				piece->promote();
 			}
 		}
 		
@@ -1093,6 +1095,36 @@ class Board
 		return vPieces;
 	}
 	
+	int getNPieces (bool _team)
+	{
+		Vector <Piece*>* vPiece = getAllPieces(_team);
+		int n = vPiece->size();
+		
+		for (int i=0;i<vPiece->size();++i)
+		{
+			//delete (*vPiece)(i);
+		}
+		vPiece->clear();
+		return n;
+	}
+	
+	
+	//bool hasPiece(unsigned char shortName)
+	//{
+		
+	//	return false;
+	//}
+	
+	bool checkMatePossible ()
+	{
+		// requirments for checkmate: A team must have at least a king plus
+		// * Queen
+		// * Rook
+		// * 2 bishops
+		// * knight and bishop
+		return false;
+	}
+	
 	Vector <Board*> * getAllMoves(bool _team)
 	{
 		// get all movable pieces
@@ -1104,6 +1136,7 @@ class Board
 		{
 			addAllMovesFrom((*vPiece)(i2),vMove);
 		}
+		delete vPiece;
 		
 		if ( vMove->size() > 0 )
 		{
@@ -1140,7 +1173,29 @@ class Board
 			return false;
 		}
 		
-		*this = *(*vMove)(rng.rand(vMove->size()));
+		// build legal move vector
+		Vector <Board*> * vLegal = new Vector <Board*>;
+		
+		for (int i=0; i<vMove->size(); ++i)
+		{
+			if ( (*vMove)(i)->boardStatus(_team) != 1 )
+			{
+				vLegal->push( (*vMove)(i) );
+			}
+			else
+			{
+				std::cout<<"Illegal move found\n";
+			}
+		}
+		
+		if ( vLegal->size() == 0 )
+		{
+			// there is no legal move to make... Maybe stalemate/checkmate?
+			std::cout<<"Stalemate/checkmate detected\n";
+			return false;
+		}
+		
+		*this = *(*vLegal)(rng.rand(vLegal->size()));
 			
 		return true;
 	}
@@ -1177,6 +1232,7 @@ class Board
 		{
 			addAllMovesFrom((*vPiece)(i2),vMove);
 		}
+		delete vPiece;
 		std::cout<<"Found "<<vMove->size()<<" moves.\n";
 		
 		// pick move which lowers opponent's score the most.
@@ -1229,8 +1285,15 @@ class Board
 		return false;
 	}
 	
-	bool materialDepthMove(int depth)
+	// find a move which results in best material gain over 2 turns...
+	bool materialDepthMove(bool _team, int depth)
 	{
+		generateSubs(_team);
+		
+		for (int i=0; i<vSubstates.size(); ++i)
+		{
+		}
+		
 		return false;
 	}
 	
@@ -1250,6 +1313,17 @@ class Board
 		// checkmate
 		// stalemate
 		
+		// check for stalemate endgame here (not enough pieces to checkmate)
+		//Vector <Piece*> * vPiece = getAllPieces(
+		
+		if ( getNPieces(WHITE) == 1 && getNPieces(BLACK) == 1)
+		{
+			//std::cout<<"Stalemate detected: Only kings remain.\n";
+			return 2;
+		}
+		
+		//generateSubs(_team);
+		
 		Vector <Board*> * vMove = getAllMoves(!_team);
 		
 		for (int i=0;i<vMove->size();++i)
@@ -1263,6 +1337,8 @@ class Board
 					delete (*vMove)(i2);
 				}
 				vMove->clear();
+				
+				
 				
 				return 1;
 			}
@@ -1290,9 +1366,16 @@ class Board
 		{
 			score += element->materialValue;
 		}
+		delete vPiece;
 
 		return score;
 	}
+	
+	// return worst score in all substates
+	// int getWorstScore(bool _team)
+	// {
+		// generateSubs(_team);
+	// }
 	
 	bool hasKing(bool _team)
 	{
@@ -1309,5 +1392,22 @@ class Board
 			}
 		}
 		return false;
+	}
+	
+	// generate all possible moves and store
+	void generateSubs(bool _team)
+	{
+		if ( vSubstates.size() > 0 )
+		{
+			return;
+		}
+		// get all movable pieces
+		auto vPiece = getAllPieces(_team);
+
+		// get all moves for all pieces
+		for (int i2=0;i2<vPiece->size();++i2)
+		{
+			addAllMovesFrom((*vPiece)(i2),&vSubstates);
+		}
 	}
 };
