@@ -177,11 +177,6 @@ int main (int narg, char ** arg)
 				//mainBoard.materialMove(WHITE);
 				//mainBoard.materialDepthMove(WHITE, 2);
 				
-				// if ( mainBoard.boardStatus(WHITE) == 1 )
-				// {
-					// std::cout<<"White entered check/checkmate.\n";
-					// gameLog+="White entered check/checkmate.\n";
-				// }
 				
 				// analysis
 				std::cout<<mainBoard.getState(true)<<"\n";
@@ -214,12 +209,6 @@ int main (int narg, char ** arg)
 				}
 				//mainBoard.materialMove(BLACK);
 				//mainBoard.materialDepthMove(BLACK,2);
-				
-				// if ( mainBoard.boardStatus(BLACK) == 1 )
-				// {
-					// std::cout<<"Black entered check/checkmate.\n";
-					// gameLog+="Black entered check/checkmate.\n";
-				// }
 				
 				std::cout<<mainBoard.getState(true)<<"\n";
 				gameLog+=mainBoard.getState(true)+"\n\n";
@@ -299,6 +288,8 @@ int main (int narg, char ** arg)
 				y1=digits[1];
 				x2=digits[2];
 				y2=digits[3];
+				
+				mainBoard.move(x1,y1,x2,y2);
 			}
 			else
 			{
