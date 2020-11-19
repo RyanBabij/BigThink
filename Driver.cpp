@@ -282,14 +282,90 @@ int main (int narg, char ** arg)
 			// process digits
 			if (currentDigit == 4)
 			{
-				std::cout<<"Valid input: \n";
-				std::cout<<digits[0]<<digits[1]<<digits[2]<<digits[3]<<"\n";
+				//std::cout<<"Valid input: \n";
+				//std::cout<<digits[0]<<digits[1]<<digits[2]<<digits[3]<<"\n";
 				x1=digits[0];
 				y1=digits[1];
 				x2=digits[2];
 				y2=digits[3];
 				
-				mainBoard.move(x1,y1,x2,y2);
+				if (mainBoard.move(x1,y1,x2,y2))
+				{
+					std::cout<<mainBoard.getState(true)<<"\n";
+					if ( mainBoard.hasKing(BLACK)==false )
+					{
+						std::cout<<"White wins\n";
+						break;
+					}
+					
+					std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
+					
+					if ( mainBoard.boardStatus(BLACK) == 1 )
+					{
+						std::cout<<"Black is in check/checkmate.\n";
+						gameLog+="Black is in check/checkmate.\n";
+					}
+					else if ( mainBoard.boardStatus(BLACK) == 2 )
+					{
+						std::cout<<"Stalemate.\n";
+						gameLog+="Stalemate.\n";
+						return 0;
+					}
+					
+					if ( mainBoard.randomMove(BLACK) == false )
+					{
+						std::cout<<"Black is unable to move.\n";
+						// if we are in check, this is checkmate
+						if (mainBoard.boardStatus(BLACK) == 1)
+						{
+							std::cout<<"Black is in checkmate, white wins.\n";
+						}
+						return 0;
+					}
+					//mainBoard.materialMove(BLACK);
+					//mainBoard.materialDepthMove(BLACK,2);
+					
+					std::cout<<mainBoard.getState(true)<<"\n";
+					gameLog+=mainBoard.getState(true)+"\n\n";
+					
+					if ( mainBoard.hasKing(WHITE)==false )
+					{
+						std::cout<<"Black wins\n";
+						break;
+					}
+					
+					std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
+				}
+				
+				//std::cout<<"\n\nTurn: "<<i++<<"\n";
+				//gameLog+="\n\nTurn: "+DataTools::toString(i-1)+"\n\n";
+				
+				// if ( mainBoard.boardStatus(WHITE) == 1 )
+				// {
+					// std::cout<<"White is in check/checkmate.\n";
+					// gameLog+="White is in check/checkmate.\n";
+				// }
+				// else if ( mainBoard.boardStatus(WHITE) == 2 )
+				// {
+					// std::cout<<"Stalemate.\n";
+					// gameLog+="Stalemate.\n";
+					// return 0;
+				// }
+				
+				// if ( mainBoard.randomMove(WHITE) == false )
+				// {
+					// std::cout<<"White is unable to move.\n";
+					// return 0;
+				// }
+				// //mainBoard.materialMove(WHITE);
+				// //mainBoard.materialDepthMove(WHITE, 2);
+				
+				
+				// // analysis
+				// std::cout<<mainBoard.getState(true)<<"\n";
+				// gameLog+=mainBoard.getState(true)+"\n\n";
+				
+
 			}
 			else
 			{

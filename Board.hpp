@@ -30,6 +30,8 @@ class Board
 	bool sideToMove;
 	
 	Piece* aBoard [8][8];
+	//char boardStatus; // should be calculated whenever a board is generated.
+	
 	
 	~Board()
 	{
@@ -148,6 +150,7 @@ class Board
 		if ( isSafe(x1,y1) == false || isSafe(x2,y2) == false ||
 		aBoard[x1][y1] == 0 )
 		{
+			std::cout<<"There is no piece at "<<x1<<", "<<y1<<"\n";
 			return false;
 		}
 		
@@ -156,6 +159,7 @@ class Board
 		if ( movePiece->team != sideToMove )
 		{
 			std::cout<<"Invalid move: Piece "<<movePiece->x<<", "<<movePiece->y<<" is not on the side to move.\n";
+			return false;
 		}
 		
 		aBoard[x1][y1]=0;
@@ -204,27 +208,27 @@ class Board
 		for (int i=0;i<8;++i)
 		{
 			aBoard[i][1] = new Piece ("pawn", WPAWN, WHITE, i, 1, 1);
-			aBoard[i][6] = new Piece("pawn", BPAWN, BLACK, i, 6, 1);
+			//aBoard[i][6] = new Piece("pawn", BPAWN, BLACK, i, 6, 1);
 		}
 		
 		aBoard[0][0] = new Piece ("rook", WROOK, WHITE, 0,0,5);
 		aBoard[7][0] = new Piece ("rook", WROOK, WHITE, 7,0,5);
-		aBoard[0][7] = new Piece ("rook", BROOK, BLACK, 0,7,5);
-		aBoard[7][7] = new Piece ("rook", BROOK, BLACK, 7,7,5);
+		// aBoard[0][7] = new Piece ("rook", BROOK, BLACK, 0,7,5);
+		// aBoard[7][7] = new Piece ("rook", BROOK, BLACK, 7,7,5);
 		
 		aBoard[1][0] = new Piece ("knight", WKNIGHT, WHITE, 1,0,3);
 		aBoard[6][0] = new Piece ("knight", WKNIGHT, WHITE, 6,0,3);
-		aBoard[1][7] = new Piece ("knight", BKNIGHT, BLACK, 1,7,3);
-		aBoard[6][7] = new Piece ("knight", BKNIGHT, BLACK, 6,7,3);
+		// aBoard[1][7] = new Piece ("knight", BKNIGHT, BLACK, 1,7,3);
+		// aBoard[6][7] = new Piece ("knight", BKNIGHT, BLACK, 6,7,3);
 		
 		aBoard[2][0] = new Piece ("bishop", WBISHOP, WHITE, 2,0,3);
 		aBoard[5][0] = new Piece ("bishop", WBISHOP, WHITE, 5,0,3);
-		aBoard[2][7] = new Piece ("bishop", BBISHOP, BLACK, 2,7,3);
-		aBoard[5][7] = new Piece ("bishop", BBISHOP, BLACK, 5,7,3);
+		// aBoard[2][7] = new Piece ("bishop", BBISHOP, BLACK, 2,7,3);
+		// aBoard[5][7] = new Piece ("bishop", BBISHOP, BLACK, 5,7,3);
 		
 		aBoard[3][0] = new Piece ("queen", WQUEEN, WHITE, 3,0,9);
 		aBoard[4][0] = new Piece ("king", WKING, WHITE, 4,0,1000);
-		aBoard[3][7] = new Piece ("queen", BQUEEN, BLACK, 3,7,9);
+		//aBoard[3][7] = new Piece ("queen", BQUEEN, BLACK, 3,7,9);
 		aBoard[4][7] = new Piece ("king", BKING, BLACK, 4,7,1000);
 	}
 	
@@ -1357,6 +1361,9 @@ class Board
 		// checkmate
 		// stalemate
 		
+		//Check: If some of the next moves result in loss of king.
+		//Checkmate: If no substate avoids check
+		
 		// check for stalemate endgame here (not enough pieces to checkmate)
 		//Vector <Piece*> * vPiece = getAllPieces(
 		
@@ -1367,6 +1374,8 @@ class Board
 			//std::cout<<"Stalemate detected: Only kings remain.\n";
 			return 2;
 		}
+		
+		//stalemate: lack of material
 		
 		generateSubs();
 		
