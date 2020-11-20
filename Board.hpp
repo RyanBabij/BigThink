@@ -158,8 +158,8 @@ class Board
 		
 		if ( movePiece->team != sideToMove )
 		{
-			std::cout<<"Invalid move: Piece "<<movePiece->x<<", "<<movePiece->y<<" is not on the side to move.\n";
-			return false;
+			//std::cout<<"Invalid move: Piece "<<movePiece->x<<", "<<movePiece->y<<" is not on the side to move.\n";
+			//return false;
 		}
 		
 		aBoard[x1][y1]=0;
@@ -1178,8 +1178,10 @@ class Board
 		
 		if ( vMove->size() > 0 )
 		{
+			std::cout<<"Returning "<<vMove->size()<<" moves\n";
 			return vMove;
 		}
+		std::cout<<"Error getting all moves, returning null vector\n";
 		return 0;
 	}
 	
@@ -1219,7 +1221,7 @@ class Board
 		
 		for (int i=0; i<vMove->size(); ++i)
 		{
-			if ( (*vMove)(i)->boardStatus(_team) != 1 )
+			if ( (*vMove)(i)->boardStatus() != 1 )
 			{
 				vLegal->push( (*vMove)(i) );
 			}
@@ -1231,7 +1233,8 @@ class Board
 		
 		if ( vLegal->size() == 0 )
 		{
-			// there is no legal move to make... Maybe stalemate/checkmate?
+			// there is no legal move to make...
+			// This is either a stalemate or checkmate.
 			std::cout<<"Stalemate/checkmate detected\n";
 			return false;
 		}
@@ -1353,8 +1356,10 @@ class Board
 	// 3 - stalemate (actual)
 	// 4 - stalemate (material)
 	
-	char boardStatus(bool _team)
+	char boardStatus()
 	{
+		std::cout<<"Board status for "<<getSideToMove()<<".\n";
+		
 		//return 0;
 		// need to check
 		// check
@@ -1367,35 +1372,36 @@ class Board
 		// check for stalemate endgame here (not enough pieces to checkmate)
 		//Vector <Piece*> * vPiece = getAllPieces(
 		
-		//std::cout<<"Board status for "<<getSideToMove()<<".\n";
+
 		
 		if ( getNPieces(WHITE) == 1 && getNPieces(BLACK) == 1)
 		{
 			//std::cout<<"Stalemate detected: Only kings remain.\n";
+			std::cout<<"Status: 2\n";
 			return 2;
 		}
 		
 		//stalemate: lack of material
 		
 		generateSubs();
+		//Vector <Board*>* vMove = getAllMoves(
 		
 		// If we find a move which can capture the king, the board state is in check.
 		for (int i=0;i<vSubstates.size();++i)
 		{
-			if ( vSubstates(i)->hasKing(_team) == false )
+			if ( vSubstates(i)->hasKing(!sideToMove) == false )
 			{
-				std::cout<<"Found check\n";
 				// we are in check / checkmate
 
 				// generate substates for all of these substates.
 				// if there is no substate which has a way to avoid check,
 				// we are in checkmate.
 				
-				
+				std::cout<<"Status: 1\n";
 				return 1;
 			}
 		}
-				
+		std::cout<<"Status: 0\n";
 		return 0;
 	}
 	
@@ -1426,17 +1432,24 @@ class Board
 	bool hasKing(bool _team)
 	{
 		// get all movable pieces
-		auto vPiece = getAllPieces(_team);
+		Vector <Piece*>* vPiece = getAllPieces(_team);
+		
+		if (vPiece == 0 )
+		{
+			// null vector means 0 pieces
+			return false;
+		}
 		
 		// check if vector contains a king
-		
-		for (auto const& element : *vPiece)
+		for (int i=0;i<vPiece->size();++i)
 		{
-			if (element->getShortName() == 'k' || element->getShortName() == 'K')
+			if ((*vPiece)(i)->getShortName() == 'k' || (*vPiece)(i)->getShortName() == 'K')
 			{
+				delete vPiece;
 				return true;
 			}
 		}
+		delete vPiece;
 		return false;
 	}
 	

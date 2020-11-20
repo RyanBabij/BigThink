@@ -157,19 +157,19 @@ int main (int narg, char ** arg)
 				std::cout<<"\n\nTurn: "<<i++<<"\n";
 				gameLog+="\n\nTurn: "+DataTools::toString(i-1)+"\n\n";
 				
-				if ( mainBoard.boardStatus(WHITE) == 1 )
+				if ( mainBoard.boardStatus() == 1 )
 				{
 					std::cout<<"White is in check/checkmate.\n";
 					gameLog+="White is in check/checkmate.\n";
 				}
-				else if ( mainBoard.boardStatus(WHITE) == 2 )
+				else if ( mainBoard.boardStatus() == 2 )
 				{
 					std::cout<<"Stalemate.\n";
 					gameLog+="Stalemate.\n";
 					return 0;
 				}
 				
-				if ( mainBoard.randomMove(WHITE) == false )
+				if ( mainBoard.randomMove(BLACK) == false )
 				{
 					std::cout<<"White is unable to move.\n";
 					return 0;
@@ -190,12 +190,12 @@ int main (int narg, char ** arg)
 				
 				std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
 				
-				if ( mainBoard.boardStatus(BLACK) == 1 )
+				if ( mainBoard.boardStatus() == 1 )
 				{
 					std::cout<<"Black is in check/checkmate.\n";
 					gameLog+="Black is in check/checkmate.\n";
 				}
-				else if ( mainBoard.boardStatus(BLACK) == 2 )
+				else if ( mainBoard.boardStatus() == 2 )
 				{
 					std::cout<<"Stalemate.\n";
 					gameLog+="Stalemate.\n";
@@ -300,12 +300,15 @@ int main (int narg, char ** arg)
 					
 					std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
 					
-					if ( mainBoard.boardStatus(BLACK) == 1 )
+					char blackState = mainBoard.boardStatus();
+					std::cout<<"Blackstate: "<<(int)blackState<<"\n";
+					
+					if ( blackState == 1 )
 					{
 						std::cout<<"Black is in check/checkmate.\n";
 						gameLog+="Black is in check/checkmate.\n";
 					}
-					else if ( mainBoard.boardStatus(BLACK) == 2 )
+					else if ( blackState == 2 )
 					{
 						std::cout<<"Stalemate.\n";
 						gameLog+="Stalemate.\n";
@@ -316,7 +319,7 @@ int main (int narg, char ** arg)
 					{
 						std::cout<<"Black is unable to move.\n";
 						// if we are in check, this is checkmate
-						if (mainBoard.boardStatus(BLACK) == 1)
+						if (blackState != 0)
 						{
 							std::cout<<"Black is in checkmate, white wins.\n";
 						}
