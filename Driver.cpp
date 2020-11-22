@@ -301,7 +301,7 @@ int main (int narg, char ** arg)
 					std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
 					
 					char blackState = mainBoard.boardStatus();
-					std::cout<<"Blackstate: "<<(int)blackState<<"\n";
+					//std::cout<<"Blackstate: "<<(int)blackState<<"\n";
 					
 					if ( blackState == 1 )
 					{
@@ -319,7 +319,7 @@ int main (int narg, char ** arg)
 					{
 						std::cout<<"Black is unable to move.\n";
 						// if we are in check, this is checkmate
-						if (blackState != 0)
+						if (mainBoard.boardStatus() != 0)
 						{
 							std::cout<<"Black is in checkmate, white wins.\n";
 						}
@@ -328,14 +328,14 @@ int main (int narg, char ** arg)
 					//mainBoard.materialMove(BLACK);
 					//mainBoard.materialDepthMove(BLACK,2);
 					
-					std::cout<<mainBoard.getState(true)<<"\n";
+					//std::cout<<mainBoard.getState(true)<<"\n";
 					gameLog+=mainBoard.getState(true)+"\n\n";
 					
-					if ( mainBoard.hasKing(WHITE)==false )
-					{
-						std::cout<<"Black wins\n";
-						break;
-					}
+					// if ( mainBoard.hasKing(WHITE)==false )
+					// {
+						// std::cout<<"Black wins\n";
+						// break;
+					// }
 					
 					std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)<<" / "<<mainBoard.getMaterialScore(BLACK)<<"\n";
 				}
