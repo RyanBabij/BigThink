@@ -225,7 +225,7 @@ class Board
 		for (int i=0;i<8;++i)
 		{
 			aBoard[i][1] = new Piece ("pawn", WPAWN, WHITE, i, 1, 1);
-			//aBoard[i][6] = new Piece("pawn", BPAWN, BLACK, i, 6, 1);
+			aBoard[i][6] = new Piece("pawn", BPAWN, BLACK, i, 6, 1);
 		}
 		
 		aBoard[0][0] = new Piece ("queen", WQUEEN, WHITE, 0,0,5);
@@ -1204,22 +1204,7 @@ class Board
 	}
 	
 	bool randomMove (bool _team)
-	{
-		//std::cout<<"Booard: Random move for "<<getSideToMove()<<".\n";
-		
-		
-		std::string strTeam = "";
-		if (_team == WHITE)
-		{
-			std::cout<<"*** Random move: WHITE ***\n";
-			strTeam = "white";
-		}
-		else if (_team == BLACK)
-		{
-			std::cout<<"*** Random move: BLACK ***\n";
-			strTeam = "black";
-		}
-		
+	{		
 		Vector <Board*> * vMove = getAllMoves(_team);
 		
 		if (vMove == 0)
@@ -1230,22 +1215,19 @@ class Board
 		
 		if (vMove->size() == 0)
 		{
-			std::cout<<"Error: No "<<strTeam<<" moves found.\n";
+			std::cout<<"Error: No moves found.\n";
 			return false;
 		}
 		
 		// build legal move vector
 		Vector <Board*> * vLegal = new Vector <Board*>;
 		
+		// push only legal moves to the vector
 		for (int i=0; i<vMove->size(); ++i)
 		{
 			if ( (*vMove)(i)->boardStatus() != 1 )
 			{
 				vLegal->push( (*vMove)(i) );
-			}
-			else
-			{
-				//std::cout<<"Illegal move found\n";
 			}
 		}
 		
@@ -1253,7 +1235,6 @@ class Board
 		{
 			// there is no legal move to make...
 			// This is either a stalemate or checkmate.
-			//std::cout<<"Stalemate/checkmate detected\n";
 			return false;
 		}
 		
