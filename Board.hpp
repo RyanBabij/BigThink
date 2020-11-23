@@ -2,31 +2,12 @@
 
 #include <time.h>
 
-
-
 class Board
 {
-	// 0 = empty space
-	
-	// 244 = white pawn
-	// r = white rook
-	// n = white knight
-	// b = white bishop
-	// q = white queen
-	// k = white king
-	
-	// 245 = black pawn
-	// R = black rook
-	// N = black knight
-	// B = black bishop
-	// Q = black queen
-	// K = black king
-	
 	Vector <Board*> vSubstates; // substates if current side moves
 	Vector <Board*> vSubstates2; // substates if opponent moves again
 	
 	std::string transitionName;
-	
 	
 	public:
 	bool sideToMove;
@@ -35,7 +16,6 @@ class Board
 	char status; // should be calculated whenever a board is generated.
 	int id;
 	static int STATIC_ID;
-	
 	
 	~Board()
 	{
@@ -51,13 +31,8 @@ class Board
 				aBoard[x][y] = 0;
 			}
 		}
-		
 		// recursively delete all substates
-		for (int i=0;i<vSubstates.size();++i)
-		{
-			delete vSubstates(i);
-		}
-		vSubstates.clear();
+		clearSubs();
 	}
 	
 	Board(bool _sideToMove = WHITE)
@@ -77,9 +52,11 @@ class Board
 		
 		id=STATIC_ID++;
 	}
-	Board(const Board& board) // copy constructor (this should actually be a shift to substate)
+	Board(const Board& board) // copy constructor
+	//(this should actually be a shift to substate)
 	// but for now it's treated as a fresh board.
-	// This needs to be updated to copy not just the board, but any substates generated.
+	// This needs to be updated to copy not just the board,
+	// but any substates generated.
 	{
 		status=board.status;
 		// I assume the default copy constructor copys the pointers in aBoard,
@@ -104,18 +81,13 @@ class Board
 		}
 		
 		// recursively delete all substates
-		for (int i=0;i<vSubstates.size();++i)
-		{
-			delete vSubstates(i);
-		}
-		vSubstates.clear();
+		clearSubs();
 		
 		id=STATIC_ID++;
 	}
 	
 	// Equals operator: Identify identical board states for pruning?
-	
-	//Assignment operator: Copy board state.
+	// Assignment operator: Copy board state.
 	Board operator=(const Board& board)
 	{
 		status=board.status;
@@ -138,6 +110,9 @@ class Board
 			}
 		}
 		id=STATIC_ID++;
+		
+		clearSubs();
+		
 		return board;
 	}
 
@@ -150,13 +125,10 @@ class Board
 		return "BLACK";
 	}
 
+	// move piece from (x1,y1) to (x2,y2). Return false if invalid move.
+	// if must be the piece's team's turn, and the move should be valid
 	bool move (int x1, int y1, int x2, int y2)
 	{
-		//std::cout<<"MOVE: "<<getSideToMove()<<".\n";
-
-		// move piece from (x1,y1) to (x2,y2). Return false if invalid move.
-		// if must be the piece's team's turn, and the move should be valid
-		
 		// assume any target piece is captured.
 		if ( isSafe(x1,y1) == false || isSafe(x2,y2) == false ||
 		aBoard[x1][y1] == 0 )
@@ -201,9 +173,7 @@ class Board
 		sideToMove=!sideToMove;
 		
 		//substates must be cleared/merged
-		
-		vSubstates.clearPtr();
-		vSubstates2.clearPtr();
+		clearSubs();
 		status=0;
 		
 		return true;
@@ -1203,8 +1173,15 @@ class Board
 		return 0;
 	}
 	
+	bool skipTurn(bool _team)
+	{
+		sideToMove = !sideToMove;
+		clearSubs();
+		return false;
+	}
+	
 	bool randomMove (bool _team)
-	{		
+	{
 		Vector <Board*> * vMove = getAllMoves(_team);
 		
 		if (vMove == 0)
@@ -1225,7 +1202,8 @@ class Board
 		// push only legal moves to the vector
 		for (int i=0; i<vMove->size(); ++i)
 		{
-			if ( (*vMove)(i)->boardStatus() != 1 )
+			if ( (*vMove)(i)->boardStatus() != WHITE_NO_KING
+			 && (*vMove)(i)->boardStatus() != BLACK_NO_KING )
 			{
 				vLegal->push( (*vMove)(i) );
 			}
@@ -1239,7 +1217,6 @@ class Board
 		}
 		
 		*this = *(*vLegal)(rng.rand(vLegal->size()));
-			
 		return true;
 	}
 	
@@ -1340,93 +1317,55 @@ class Board
 		return false;
 	}
 	
-	
-	// 0000 0000
-	// 1000 0000 - WHITE check
-	// 1100 0000 - WHITE checkmate
-	// 0100 0000 - WHITE stalemate
-	// 0000 1000 - BLACK check
-	// 0000 1100 - BLACK checkmate
-	// 0000 0100 - BLACK stalemate
-	
-	// 0 - normal
-	// 1 - check
-	// 2 - checkmate
-	// 3 - stalemate (actual)
-	// 4 - stalemate (material)
-	
 	char boardStatus()
 	{
-		//std::cout<<"Board status for "<<getSideToMove()<<", id: "<<id<<".\n";
-		
-		//return 0;
-		// need to check
-		// check
-		// checkmate
-		// stalemate
-		
-		//Check: If some of the next moves result in loss of king.
-		//Checkmate: If no substate avoids check
-		
+		// Check: If some of the next moves result in loss of king.
+		// Checkmate: If no substate avoids check
 		// check for stalemate endgame here (not enough pieces to checkmate)
-		//Vector <Piece*> * vPiece = getAllPieces(
-		
-
 		
 		if ( getNPieces(WHITE) == 1 && getNPieces(BLACK) == 1)
 		{
-			//std::cout<<"Stalemate detected: Only kings remain.\n";
-			//std::cout<<"Status: 2\n";
-			status=2;
-			return 2;
+			status!=STALEMATE_MATERIAL;
 		}
 		
 		//stalemate: lack of material
 		
 		generateSubs();
-		//Vector <Board*>* vMove = getAllMoves(
-		
-		//std::cout<<"Board status for "<<getSideToMove()<<".\n";
-		
+
 		// If we find a move which can capture the king, the board state is in check.
-		//std::cout<<"Status Substates: "<<vSubstates.size()<<"\n";
 		for (int i=0;i<vSubstates.size();++i)
 		{
-			if ( vSubstates(i)->hasKing(sideToMove) == false || vSubstates(i)->hasKing(!sideToMove) == false )
+			if (vSubstates(i)->hasKing(BLACK) == false)
 			{
-				// we are in check / checkmate
-
-				// generate substates for all of these substates.
-				// if there is no substate which has a way to avoid check,
-				// we are in checkmate.
-				
-				//std::cout<<"Status: 1\n";
-				status=1;
-				return 1;
+				status |= BLACK_CHECK;
+				status |= BLACK_NO_KING;
+			}
+			if (vSubstates(i)->hasKing(WHITE) == false)
+			{
+				status |= WHITE_CHECK;
+				status |= WHITE_NO_KING;
 			}
 		}
-		//std::cout<<"Status Substates2: "<<vSubstates2.size()<<"\n";
+
 		for (int i=0;i<vSubstates2.size();++i)
 		{
-			//std::cout<<vSubstates2(i)->getState(true)<<"\n";
-			
-			if ( vSubstates2(i)->hasKing(sideToMove) == false || vSubstates2(i)->hasKing(!sideToMove) == false )
+			if (vSubstates2(i)->hasKing(BLACK) == false)
 			{
-				// we are in check / checkmate
-
-				// generate substates for all of these substates.
-				// if there is no substate which has a way to avoid check,
-				// we are in checkmate.
-				
-				
-				
-				//std::cout<<"Status: 1\n";
-				status=1;
-				return 1;
+				status |= BLACK_CHECK;
+				status |= BLACK_NO_KING;
+			}
+			if (vSubstates2(i)->hasKing(WHITE) == false)
+			{
+				status |= WHITE_CHECK;
+				status |= WHITE_NO_KING;
 			}
 		}
-		//std::cout<<"Status: "<<(int)status<<"\n";
 		return status;
+	}
+	
+	bool hasState(unsigned char state)
+	{
+		return ((status & state) == state);
 	}
 	
 	// calculate the score for this board state based on material.
@@ -1446,33 +1385,15 @@ class Board
 
 		return score;
 	}
-	
-	// return worst score in all substates
-	// int getWorstScore(bool _team)
-	// {
-		// generateSubs(_team);
-	// }
-	
+
 	bool hasKing(bool _team)
-	{
-		// std::cout<<"Checking king for side: ";
-		// if (_team==WHITE)
-		// {
-			// std::cout<<"WHITE\n";
-		// }
-		// else
-		// {
-			// std::cout<<"BLACK\n";
-		// }
-		//return true;
-		
+	{	
 		// get all movable pieces
 		Vector <Piece*>* vPiece = getAllPieces(_team);
 		
 		if (vPiece == 0)
 		{
 			// null vector means 0 pieces
-			//std::cout<<"No king\n";
 			return false;
 		}
 		
@@ -1482,12 +1403,10 @@ class Board
 			if ((*vPiece)(i)->getShortName() == 'k' || (*vPiece)(i)->getShortName() == 'K')
 			{
 				delete vPiece;
-				//std::cout<<"Yes king\n";
 				return true;
 			}
 		}
 		delete vPiece;
-		//std::cout<<"No king\n";
 		return false;
 	}
 	
@@ -1495,11 +1414,8 @@ class Board
 	// this should be done automatically by the Board class when required.
 	void generateSubs()
 	{
-		//std::cout<<"Generating substates for id: "<<id<<".\n";
-		
 		if ( vSubstates.size() > 0 && vSubstates2.size() > 0 )
 		{
-			//std::cout<<"Already done.\n";
 			return;
 		}
 		
@@ -1518,7 +1434,6 @@ class Board
 			{
 				vSubstates(i)->sideToMove=!sideToMove;
 			}
-			//std::cout<<"Substates: "<<vSubstates.size()<<"\n";
 		}
 		// generate moves if opponent moves again (to determine check)
 		if ( vSubstates2.size() == 0 )
@@ -1535,8 +1450,13 @@ class Board
 			{
 				vSubstates2(i)->sideToMove=!sideToMove;
 			}
-			//std::cout<<"Substates2: "<<vSubstates2.size()<<"\n";
 		}
+	}
+	void clearSubs()
+	{
+		// recursively delete all substates
+		vSubstates.clearPtr();
+		vSubstates2.clearPtr();
 	}
 };
 

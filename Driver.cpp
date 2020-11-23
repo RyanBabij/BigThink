@@ -29,6 +29,16 @@
 #define WHITE true
 #define BLACK false
 
+	// board states for analysis.
+#define WHITE_CHECK 0b10000000
+#define WHITE_CHECKMATE 0b01000000
+#define WHITE_NO_KING 0b00100000
+#define BLACK_CHECK 0b00001000
+#define BLACK_CHECKMATE 0b00000100
+#define BLACK_NO_KING 0b00000010
+#define STALEMATE_MOVEMENT 0b00001000
+#define STALEMATE_MATERIAL 0b00000100
+	// pieces
 #define WPAWN 244
 #define BPAWN 245
 #define WROOK 'r'
@@ -48,6 +58,10 @@ RandomLehmer rng;
 #include "Board.hpp"
 
 Board mainBoard;
+
+std::string gameLog = "";
+
+#define LOG_GAMES false
 
 int moveBlackRandom()
 {
@@ -71,7 +85,17 @@ int moveBlackRandom()
 
 void printScore()
 {
-	std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)-1000<<" / "<<mainBoard.getMaterialScore(BLACK)-1000<<"\n";
+	std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)-1000
+	<<" / "<<mainBoard.getMaterialScore(BLACK)-1000<<"\n";
+}
+
+void printBoard(bool _log=true)
+{
+	std::cout<<mainBoard.getState(true)<<"\n\n";
+	if (_log && LOG_GAMES)
+	{
+		gameLog+=mainBoard.getState(true)+"\n\n";
+	}
 }
 
 int main (int narg, char ** arg)
@@ -79,8 +103,6 @@ int main (int narg, char ** arg)
 	rng.seed(time(NULL));
 	
 	mainBoard.reset();
-
-	std::string gameLog = "";
 	
 	std::cout<<"\n\nBigThink chess engine\n";
 	std::cout<<"Enter 4 digits to make move.\n";
@@ -93,7 +115,7 @@ int main (int narg, char ** arg)
 		
 		std::string input;
 		
-		std::cout<<mainBoard.getState(true)<<"\n\n";
+		printBoard();
 		
 		// command options
 		// a - AI turn
@@ -125,7 +147,9 @@ int main (int narg, char ** arg)
 				std::cout<<"\n\nTurn: "<<i++<<"\n";
 				gameLog+="\n\nTurn: "+DataTools::toString(i-1)+"\n\n";
 				
-				if ( mainBoard.boardStatus() == 1 )
+				printBoard();
+				
+				if ( mainBoard.hasState(WHITE_CHECK) )
 				{
 					std::cout<<"White is in check/checkmate.\n";
 					gameLog+="White is in check/checkmate.\n";
@@ -137,18 +161,24 @@ int main (int narg, char ** arg)
 					return 0;
 				}
 				
-				if ( mainBoard.randomMove(BLACK) == false )
+				if (mainBoard.hasKing(WHITE) == false)
 				{
-					std::cout<<"White is unable to move.\n";
+					std::cout<<"White king is ded.\n";
 					return 0;
 				}
+				
+				// if ( mainBoard.randomMove(WHITE) == false )
+				// {
+					// std::cout<<"White is unable to move.\n";
+					// return 0;
+				// }
 				//mainBoard.materialMove(WHITE);
 				//mainBoard.materialDepthMove(WHITE, 2);
+				mainBoard.skipTurn(WHITE);
 				
 				
 				// analysis
-				std::cout<<mainBoard.getState(true)<<"\n\n";
-				gameLog+=mainBoard.getState(true)+"\n\n";
+				printBoard();
 				
 				printScore();
 				
@@ -180,7 +210,7 @@ int main (int narg, char ** arg)
 			
 			mainBoard.randomMove(WHITE);
 			// analysis
-			std::cout<<mainBoard.getState(true)<<"\n\n";
+			printBoard();
 			
 			if ( mainBoard.hasKing(BLACK)==false )
 			{
@@ -190,7 +220,7 @@ int main (int narg, char ** arg)
 			
 			mainBoard.randomMove(BLACK);
 			
-			std::cout<<mainBoard.getState(true)<<"\n\n";
+			printBoard();
 			
 			if ( mainBoard.hasKing(WHITE)==false )
 			{
@@ -230,8 +260,7 @@ int main (int narg, char ** arg)
 			{
 				if (mainBoard.move(digit[0],digit[1],digit[2],digit[3]))
 				{
-					std::cout<<mainBoard.getState(true)<<"\n\n";
-					
+					printBoard();
 					printScore();
 					
 					std::cout<<"\n*** Black to move ***\n\n";
