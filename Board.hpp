@@ -1173,27 +1173,50 @@ class Board
 		return 0;
 	}
 	
+	// skip the turn and let the other side move again
+	// this is obviously not legal in a real game
+	// we still check if the side can move, and return false if
+	// this isn't possible
 	bool skipTurn(bool _team)
 	{
+		const bool bCanMove = canMove(_team);
+		
 		sideToMove = !sideToMove;
 		clearSubs();
-		return false;
+		return bCanMove;
 	}
 	
-	bool randomMove (bool _team)
+	bool canMove(bool _team)
+	{
+		Vector <Board*> * vMove = getAllMoves(_team);
+		
+		if ( vMove == 0 || vMove->size() == 0 )
+		{
+			delete vMove;
+			return false;
+		}
+		delete vMove;
+		return true;
+	}
+	
+	// return list of legal board states.
+	// basically all states that don't involve a side putting themself
+	// into check.
+	Vector <Board*> * getLegalMoves(bool _team)
 	{
 		Vector <Board*> * vMove = getAllMoves(_team);
 		
 		if (vMove == 0)
 		{
 			std::cout<<"Error: No moveset vector returned.\n";
-			return false;
+			return 0;
 		}
 		
 		if (vMove->size() == 0)
 		{
 			std::cout<<"Error: No moves found.\n";
-			return false;
+			delete vMove;
+			return 0;
 		}
 		
 		// build legal move vector
@@ -1213,10 +1236,26 @@ class Board
 		{
 			// there is no legal move to make...
 			// This is either a stalemate or checkmate.
+			return 0;
+		}
+		return vLegal;
+	}
+	
+	bool randomMove (bool _team)
+	{
+		// build legal move vector
+		Vector <Board*> * vLegal = getLegalMoves(_team);
+		
+		if ( vLegal == 0 || vLegal->size() == 0 )
+		{
+			// there is no legal move to make...
+			// This is either a stalemate or checkmate.
+			delete vLegal;
 			return false;
 		}
 		
 		*this = *(*vLegal)(rng.rand(vLegal->size()));
+		delete vLegal;
 		return true;
 	}
 	

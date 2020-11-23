@@ -174,7 +174,11 @@ int main (int narg, char ** arg)
 				// }
 				//mainBoard.materialMove(WHITE);
 				//mainBoard.materialDepthMove(WHITE, 2);
-				mainBoard.skipTurn(WHITE);
+				if (mainBoard.skipTurn(WHITE) == false )
+				{
+					std::cout<<"White cannot move. Stalemate/checkmate.\n";
+					return 0;
+				}
 				
 				
 				// analysis
