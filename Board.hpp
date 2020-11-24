@@ -127,7 +127,8 @@ class Board
 
 	// move piece from (x1,y1) to (x2,y2). Return false if invalid move.
 	// if must be the piece's team's turn, and the move should be valid
-	bool move (int x1, int y1, int x2, int y2)
+	// flipSideToMove needs to be false when moving pieces for castling
+	bool move (int x1, int y1, int x2, int y2, bool flipSideToMove=true)
 	{
 		// assume any target piece is captured.
 		if ( isSafe(x1,y1) == false || isSafe(x2,y2) == false ||
@@ -170,7 +171,12 @@ class Board
 			}
 		}
 		
-		sideToMove=!sideToMove;
+		movePiece->hasMoved=true;
+		
+		if (flipSideToMove)
+		{
+			sideToMove=!sideToMove;
+		}
 		
 		//substates must be cleared/merged
 		clearSubs();
@@ -198,10 +204,10 @@ class Board
 			aBoard[i][6] = new Piece("pawn", BPAWN, BLACK, i, 6, 1);
 		}
 		
-		aBoard[0][0] = new Piece ("queen", WQUEEN, WHITE, 0,0,5);
-		aBoard[7][0] = new Piece ("queen", WQUEEN, WHITE, 7,0,5);
-		// aBoard[0][7] = new Piece ("rook", BROOK, BLACK, 0,7,5);
-		// aBoard[7][7] = new Piece ("rook", BROOK, BLACK, 7,7,5);
+		aBoard[0][0] = new Piece ("rook", WROOK, WHITE, 0,0,5);
+		aBoard[7][0] = new Piece ("rook", WROOK, WHITE, 7,0,5);
+		aBoard[0][7] = new Piece ("rook", BROOK, BLACK, 0,7,5);
+		aBoard[7][7] = new Piece ("rook", BROOK, BLACK, 7,7,5);
 		
 		aBoard[1][0] = new Piece ("knight", WKNIGHT, WHITE, 1,0,3);
 		aBoard[6][0] = new Piece ("knight", WKNIGHT, WHITE, 6,0,3);
@@ -234,6 +240,43 @@ class Board
 		
 		return vBoard;
 	}
+	
+	// returns true if the board array is not 0.
+	bool hasPieceOn(const short int _x, const short int _y)
+	{
+		return (aBoard[_x][_y]!=0);
+	}
+	
+	// return true if the team can send a piece to this tile.
+	// for now we do this by generating sub boards and just looking to
+	// see if a substate has a piece there
+	bool canAttack(const short int _x, const short int _y, bool _team)
+	{
+		generateSubs();
+		
+		if (_team == sideToMove)
+		{
+			for (int i=0;i<vSubstates.size();++i)
+			{
+				if (vSubstates(i)->hasPieceOn(_x,_y))
+				{
+					return true;
+				}
+			}
+		}
+		else
+		{
+			for (int i=0;i<vSubstates2.size();++i)
+			{
+				if (vSubstates2(i)->hasPieceOn(_x,_y))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
 	
 	// only return all moves for this piece, in the form of state vector
 	void addAllMovesFrom(Piece* piece, Vector <Board*> * vBoard)
@@ -1041,6 +1084,67 @@ class Board
 					subBoard->move(piece->x,piece->y,rank,file);
 					vBoard->push(subBoard);
 				}
+			}
+			
+			// castling
+			if (piece->hasMoved == false)
+			{
+				// castle queenside
+				if ( piece->team == WHITE )
+				{
+					if ( aBoard[0][0] != 0 && aBoard[1][0] == 0 &&
+						aBoard[2][0] == 0 && aBoard[3][0] == 0
+						&& aBoard[0][0]->getShortName() == 'r'
+						&& aBoard[0][0]->hasMoved == false)
+					{
+						// Queenside castling is possible
+						Board* subBoard = new Board(*this);
+						Piece * rook = aBoard[0][0];
+						subBoard->move(piece->x,piece->y,2,0,false);
+						subBoard->move(rook->x,rook->y,3,0);
+						vBoard->push(subBoard);
+					}
+					if ( aBoard[7][0] != 0 && aBoard[6][0] == 0 &&
+						aBoard[5][0] == 0
+						&& aBoard[7][0]->getShortName() == 'r'
+						&& aBoard[7][0]->hasMoved == false)
+					{
+						// Kingside castling is possible
+						Board* subBoard = new Board(*this);
+						Piece * rook = aBoard[7][0];
+						subBoard->move(piece->x,piece->y,6,0,false);
+						subBoard->move(rook->x,rook->y,5,0);
+						vBoard->push(subBoard);
+					}
+				}
+				else
+				{
+					if ( aBoard[0][7] != 0 && aBoard[1][7] == 0 &&
+						aBoard[2][7] == 0 && aBoard[3][7] == 0
+						&& aBoard[0][7]->getShortName() == 'R'
+						&& aBoard[0][7]->hasMoved == false)
+					{
+						// Queenside castling is possible
+						Board* subBoard = new Board(*this);
+						Piece * rook = aBoard[0][7];
+						subBoard->move(piece->x,piece->y,2,7,false);
+						subBoard->move(rook->x,rook->y,3,7);
+						vBoard->push(subBoard);
+					}
+					if ( aBoard[7][7] != 0 && aBoard[6][7] == 0 &&
+						aBoard[5][7] == 0
+						&& aBoard[7][7]->getShortName() == 'R'
+						&& aBoard[7][7]->hasMoved == false)
+					{
+						// Kingside castling is possible
+						Board* subBoard = new Board(*this);
+						Piece * rook = aBoard[7][7];
+						subBoard->move(piece->x,piece->y,6,7,false);
+						subBoard->move(rook->x,rook->y,5,7);
+						vBoard->push(subBoard);
+					}
+				}
+				// castle kingside
 			}
 		}
 	}
