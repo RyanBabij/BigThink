@@ -194,6 +194,7 @@ class Board
 			{
 				(*vPiece)(i)->doubleMoved=false;
 			}
+			delete vPiece;
 		}
 		
 		//substates must be cleared/merged
@@ -222,27 +223,26 @@ class Board
 		{
 			aBoard[i][1] = new Piece ("pawn", WPAWN, WHITE, i, 1, 1);
 			aBoard[i][6] = new Piece("pawn", BPAWN, BLACK, i, 6, 1);
-			//aBoard[i][5] = new Piece("pawn", BPAWN, BLACK, i, 5, 1);
 		}
 		
-		aBoard[0][0] = new Piece ("queen", WQUEEN, WHITE, 0,0,5);
-		aBoard[7][0] = new Piece ("queen", WQUEEN, WHITE, 7,0,5);
+		aBoard[0][0] = new Piece ("rook", WROOK, WHITE, 0,0,5);
+		aBoard[7][0] = new Piece ("rook", WROOK, WHITE, 7,0,5);
 		aBoard[0][7] = new Piece ("rook", BROOK, BLACK, 0,7,5);
 		aBoard[7][7] = new Piece ("rook", BROOK, BLACK, 7,7,5);
 		
-		aBoard[1][0] = new Piece ("queen", WQUEEN, WHITE, 1,0,3);
-		aBoard[6][0] = new Piece ("queen", WQUEEN, WHITE, 6,0,3);
-		// aBoard[1][7] = new Piece ("knight", BKNIGHT, BLACK, 1,7,3);
-		// aBoard[6][7] = new Piece ("knight", BKNIGHT, BLACK, 6,7,3);
+		aBoard[1][0] = new Piece ("knight", WKNIGHT, WHITE, 1,0,3);
+		aBoard[6][0] = new Piece ("knight", WKNIGHT, WHITE, 6,0,3);
+		aBoard[1][7] = new Piece ("knight", BKNIGHT, BLACK, 1,7,3);
+		aBoard[6][7] = new Piece ("knight", BKNIGHT, BLACK, 6,7,3);
 		
 		aBoard[2][0] = new Piece ("bishop", WBISHOP, WHITE, 2,0,3);
 		aBoard[5][0] = new Piece ("bishop", WBISHOP, WHITE, 5,0,3);
-		// aBoard[2][7] = new Piece ("bishop", BBISHOP, BLACK, 2,7,3);
-		// aBoard[5][7] = new Piece ("bishop", BBISHOP, BLACK, 5,7,3);
+		aBoard[2][7] = new Piece ("bishop", BBISHOP, BLACK, 2,7,3);
+		aBoard[5][7] = new Piece ("bishop", BBISHOP, BLACK, 5,7,3);
 		
 		aBoard[3][0] = new Piece ("queen", WQUEEN, WHITE, 3,0,9);
 		aBoard[4][0] = new Piece ("king", WKING, WHITE, 4,0,1000);
-		//aBoard[3][7] = new Piece ("queen", BQUEEN, BLACK, 3,7,9);
+		aBoard[3][7] = new Piece ("queen", BQUEEN, BLACK, 3,7,9);
 		aBoard[4][7] = new Piece ("king", BKING, BLACK, 4,7,1000);
 	}
 	
@@ -284,27 +284,23 @@ class Board
 	Piece* canAttack(const short int _x, const short int _y, bool _team)
 	{
 		generateSubs();
-		
-		//if (_team == sideToMove)
-		//{
-			for (int i=0;i<vSubstates.size();++i)
+
+		for (int i=0;i<vSubstates.size();++i)
+		{
+			if ( vSubstates(i)->hasPieceOn(_x,_y,_team) )
 			{
-				if ( vSubstates(i)->hasPieceOn(_x,_y,_team) )
-				{
-					return vSubstates(i)->hasPieceOn(_x,_y,_team);
-				}
+				return vSubstates(i)->hasPieceOn(_x,_y,_team);
 			}
-		//}
-		//else
-		//{
-			for (int i=0;i<vSubstates2.size();++i)
+		}
+
+		for (int i=0;i<vSubstates2.size();++i)
+		{
+			if (vSubstates2(i)->hasPieceOn(_x,_y,_team))
 			{
-				if (vSubstates2(i)->hasPieceOn(_x,_y,_team))
-				{
-					return vSubstates2(i)->hasPieceOn(_x,_y,_team);
-				}
+				return vSubstates2(i)->hasPieceOn(_x,_y,_team);
 			}
-		//}
+		}
+			
 		return 0;
 	}
 	
@@ -346,7 +342,6 @@ class Board
 				}
 			}
 
-			
 			// can it attack diagonally left?
 			if (isSafe(piece->x-1,piece->y+1))
 			{
@@ -1201,7 +1196,8 @@ class Board
 						if ( canAttack(2,0,BLACK) || canAttack(3,0,BLACK) ||
 						canAttack(4,0,BLACK) )
 						{
-							std::cout<<"WHITE Cannot castle queenside: Tile in check\n";
+							// White cannot castle queenside
+							// as the king would be passing through check.
 						}
 						else
 						{
@@ -1222,7 +1218,8 @@ class Board
 						if ( canAttack(4,0,BLACK) || canAttack(5,0,BLACK) ||
 						canAttack(6,0,BLACK) )
 						{
-							std::cout<<"WHITE Cannot castle kingside: Tile in check\n";
+							// White cannot castle kingside
+							// as the king would be passing through check.
 						}
 						else
 						{
@@ -1247,24 +1244,11 @@ class Board
 						if ( canAttack(2,7,WHITE) || canAttack(3,7,WHITE) ||
 						canAttack(4,7,WHITE) )
 						{
-							// if ( canAttack(2,7,WHITE) )
-							// {
-								// std::cout<<"check from "<<canAttack(2,7,WHITE)->getName()<<"\n";
-							// }
-							// if ( canAttack(3,7,WHITE) )
-							// {
-								// std::cout<<"check from "<<canAttack(2,7,WHITE)->getName()<<"\n";
-							// }
-							// if ( canAttack(4,7,WHITE) )
-							// {
-								// std::cout<<"check from "<<canAttack(2,7,WHITE)->getName()<<"\n";
-							// }
-							
-							std::cout<<"BLACK Cannot castle queenside: Tile in check\n";
+							// Black cannot castle queenside
+							// as the king would be passing through check.
 						}
 						else
 						{
-							std::cout<<"Black can castle queenside\n";
 							// Queenside castling is possible
 							Board* subBoard = new Board(*this);
 							Piece * rook = aBoard[0][7];
@@ -1282,11 +1266,11 @@ class Board
 						if ( canAttack(4,7,WHITE) || canAttack(5,7,WHITE) ||
 						canAttack(6,7,WHITE) )
 						{
-							std::cout<<"BLACK Cannot castle kingside: Tile in check\n";
+							// Black cannot castle kingside
+							// as the king would be passing through check.
 						}
 						else
 						{
-							std::cout<<"Black can castle kingside\n";
 							// Kingside castling is possible
 							Board* subBoard = new Board(*this);
 							Piece * rook = aBoard[7][7];
@@ -1386,15 +1370,9 @@ class Board
 			//delete (*vPiece)(i);
 		}
 		vPiece->clear();
+		delete vPiece;
 		return n;
 	}
-	
-	
-	//bool hasPiece(unsigned char shortName)
-	//{
-		
-	//	return false;
-	//}
 	
 	bool checkMatePossible ()
 	{
@@ -1421,10 +1399,8 @@ class Board
 		
 		if ( vMove->size() > 0 )
 		{
-			//std::cout<<"Returning "<<vMove->size()<<" moves\n";
 			return vMove;
 		}
-		//std::cout<<"Error getting all moves, returning null vector\n";
 		return 0;
 	}
 	
@@ -1450,6 +1426,7 @@ class Board
 			delete vMove;
 			return false;
 		}
+		vMove->clearPtr();
 		delete vMove;
 		return true;
 	}
@@ -1485,12 +1462,18 @@ class Board
 			{
 				vLegal->push( (*vMove)(i) );
 			}
+			else
+			{
+				delete (*vMove)(i);
+			}
 		}
+		delete vMove;
 		
 		if ( vLegal->size() == 0 )
 		{
 			// there is no legal move to make...
 			// This is either a stalemate or checkmate.
+			delete vLegal;
 			return 0;
 		}
 		return vLegal;
@@ -1505,11 +1488,15 @@ class Board
 		{
 			// there is no legal move to make...
 			// This is either a stalemate or checkmate.
+			vLegal->clearPtr();
 			delete vLegal;
 			return false;
 		}
 		
 		*this = *(*vLegal)(rng.rand(vLegal->size()));
+		
+		vLegal->clearPtr();
+		
 		delete vLegal;
 		return true;
 	}
@@ -1728,6 +1715,7 @@ class Board
 			{
 				vSubstates(i)->sideToMove=!sideToMove;
 			}
+			delete vPiece;
 		}
 		// generate moves if opponent moves again (to determine check)
 		if ( vSubstates2.size() == 0 )
@@ -1744,6 +1732,7 @@ class Board
 			{
 				vSubstates2(i)->sideToMove=!sideToMove;
 			}
+			delete vPiece;
 		}
 	}
 	void clearSubs()
