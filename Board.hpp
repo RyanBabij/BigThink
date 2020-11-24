@@ -222,15 +222,16 @@ class Board
 		{
 			aBoard[i][1] = new Piece ("pawn", WPAWN, WHITE, i, 1, 1);
 			aBoard[i][6] = new Piece("pawn", BPAWN, BLACK, i, 6, 1);
+			//aBoard[i][5] = new Piece("pawn", BPAWN, BLACK, i, 5, 1);
 		}
 		
-		aBoard[0][0] = new Piece ("rook", WROOK, WHITE, 0,0,5);
-		aBoard[7][0] = new Piece ("rook", WROOK, WHITE, 7,0,5);
+		aBoard[0][0] = new Piece ("queen", WQUEEN, WHITE, 0,0,5);
+		aBoard[7][0] = new Piece ("queen", WQUEEN, WHITE, 7,0,5);
 		aBoard[0][7] = new Piece ("rook", BROOK, BLACK, 0,7,5);
 		aBoard[7][7] = new Piece ("rook", BROOK, BLACK, 7,7,5);
 		
-		aBoard[1][0] = new Piece ("knight", WKNIGHT, WHITE, 1,0,3);
-		aBoard[6][0] = new Piece ("knight", WKNIGHT, WHITE, 6,0,3);
+		aBoard[1][0] = new Piece ("queen", WQUEEN, WHITE, 1,0,3);
+		aBoard[6][0] = new Piece ("queen", WQUEEN, WHITE, 6,0,3);
 		// aBoard[1][7] = new Piece ("knight", BKNIGHT, BLACK, 1,7,3);
 		// aBoard[6][7] = new Piece ("knight", BKNIGHT, BLACK, 6,7,3);
 		
@@ -262,39 +263,49 @@ class Board
 	}
 	
 	// returns true if the board array is not 0.
-	bool hasPieceOn(const short int _x, const short int _y)
+	Piece* hasPieceOn(const short int _x, const short int _y)
 	{
-		return (aBoard[_x][_y]!=0);
+		return aBoard[_x][_y];
+	}
+	// returns true if the board array is not 0.
+	Piece* hasPieceOn(const short int _x, const short int _y, const bool _team)
+	{
+		if ( aBoard[_x][_y]==0 || aBoard[_x][_y]->team != _team)
+		{
+			return 0;
+		}
+		
+		return (aBoard[_x][_y]);
 	}
 	
 	// return true if the team can send a piece to this tile.
 	// for now we do this by generating sub boards and just looking to
 	// see if a substate has a piece there
-	bool canAttack(const short int _x, const short int _y, bool _team)
+	Piece* canAttack(const short int _x, const short int _y, bool _team)
 	{
 		generateSubs();
 		
-		if (_team == sideToMove)
-		{
+		//if (_team == sideToMove)
+		//{
 			for (int i=0;i<vSubstates.size();++i)
 			{
-				if (vSubstates(i)->hasPieceOn(_x,_y))
+				if ( vSubstates(i)->hasPieceOn(_x,_y,_team) )
 				{
-					return true;
+					return vSubstates(i)->hasPieceOn(_x,_y,_team);
 				}
 			}
-		}
-		else
-		{
+		//}
+		//else
+		//{
 			for (int i=0;i<vSubstates2.size();++i)
 			{
-				if (vSubstates2(i)->hasPieceOn(_x,_y))
+				if (vSubstates2(i)->hasPieceOn(_x,_y,_team))
 				{
-					return true;
+					return vSubstates2(i)->hasPieceOn(_x,_y,_team);
 				}
 			}
-		}
-		return false;
+		//}
+		return 0;
 	}
 	
 	
@@ -1178,7 +1189,7 @@ class Board
 			// castling
 			if (piece->hasMoved == false)
 			{
-				// castle queenside
+				// castling WHITE
 				if ( piece->team == WHITE )
 				{
 					if ( aBoard[0][0] != 0 && aBoard[1][0] == 0 &&
@@ -1186,54 +1197,105 @@ class Board
 						&& aBoard[0][0]->getShortName() == 'r'
 						&& aBoard[0][0]->hasMoved == false)
 					{
-						// Queenside castling is possible
-						Board* subBoard = new Board(*this);
-						Piece * rook = aBoard[0][0];
-						subBoard->move(piece->x,piece->y,2,0,false);
-						subBoard->move(rook->x,rook->y,3,0);
-						vBoard->push(subBoard);
+						// make sure all tiles the king visits are not in check
+						if ( canAttack(2,0,BLACK) || canAttack(3,0,BLACK) ||
+						canAttack(4,0,BLACK) )
+						{
+							std::cout<<"WHITE Cannot castle queenside: Tile in check\n";
+						}
+						else
+						{
+							// Queenside castling is possible
+							Board* subBoard = new Board(*this);
+							Piece * rook = aBoard[0][0];
+							subBoard->move(piece->x,piece->y,2,0,false);
+							subBoard->move(rook->x,rook->y,3,0);
+							vBoard->push(subBoard);
+						}
 					}
 					if ( aBoard[7][0] != 0 && aBoard[6][0] == 0 &&
 						aBoard[5][0] == 0
 						&& aBoard[7][0]->getShortName() == 'r'
 						&& aBoard[7][0]->hasMoved == false)
 					{
-						// Kingside castling is possible
-						Board* subBoard = new Board(*this);
-						Piece * rook = aBoard[7][0];
-						subBoard->move(piece->x,piece->y,6,0,false);
-						subBoard->move(rook->x,rook->y,5,0);
-						vBoard->push(subBoard);
+						// make sure all tiles the king visits are not in check
+						if ( canAttack(4,0,BLACK) || canAttack(5,0,BLACK) ||
+						canAttack(6,0,BLACK) )
+						{
+							std::cout<<"WHITE Cannot castle kingside: Tile in check\n";
+						}
+						else
+						{
+							// Kingside castling is possible
+							Board* subBoard = new Board(*this);
+							Piece * rook = aBoard[7][0];
+							subBoard->move(piece->x,piece->y,6,0,false);
+							subBoard->move(rook->x,rook->y,5,0);
+							vBoard->push(subBoard);
+						}
 					}
 				}
 				else
 				{
+					// castling BLACK
 					if ( aBoard[0][7] != 0 && aBoard[1][7] == 0 &&
 						aBoard[2][7] == 0 && aBoard[3][7] == 0
 						&& aBoard[0][7]->getShortName() == 'R'
 						&& aBoard[0][7]->hasMoved == false)
 					{
-						// Queenside castling is possible
-						Board* subBoard = new Board(*this);
-						Piece * rook = aBoard[0][7];
-						subBoard->move(piece->x,piece->y,2,7,false);
-						subBoard->move(rook->x,rook->y,3,7);
-						vBoard->push(subBoard);
+						// make sure all tiles the king visits are not in check
+						if ( canAttack(2,7,WHITE) || canAttack(3,7,WHITE) ||
+						canAttack(4,7,WHITE) )
+						{
+							// if ( canAttack(2,7,WHITE) )
+							// {
+								// std::cout<<"check from "<<canAttack(2,7,WHITE)->getName()<<"\n";
+							// }
+							// if ( canAttack(3,7,WHITE) )
+							// {
+								// std::cout<<"check from "<<canAttack(2,7,WHITE)->getName()<<"\n";
+							// }
+							// if ( canAttack(4,7,WHITE) )
+							// {
+								// std::cout<<"check from "<<canAttack(2,7,WHITE)->getName()<<"\n";
+							// }
+							
+							std::cout<<"BLACK Cannot castle queenside: Tile in check\n";
+						}
+						else
+						{
+							std::cout<<"Black can castle queenside\n";
+							// Queenside castling is possible
+							Board* subBoard = new Board(*this);
+							Piece * rook = aBoard[0][7];
+							subBoard->move(piece->x,piece->y,2,7,false);
+							subBoard->move(rook->x,rook->y,3,7);
+							vBoard->push(subBoard);
+						}
 					}
 					if ( aBoard[7][7] != 0 && aBoard[6][7] == 0 &&
 						aBoard[5][7] == 0
 						&& aBoard[7][7]->getShortName() == 'R'
 						&& aBoard[7][7]->hasMoved == false)
 					{
-						// Kingside castling is possible
-						Board* subBoard = new Board(*this);
-						Piece * rook = aBoard[7][7];
-						subBoard->move(piece->x,piece->y,6,7,false);
-						subBoard->move(rook->x,rook->y,5,7);
-						vBoard->push(subBoard);
+						// make sure all tiles the king visits are not in check
+						if ( canAttack(4,7,WHITE) || canAttack(5,7,WHITE) ||
+						canAttack(6,7,WHITE) )
+						{
+							std::cout<<"BLACK Cannot castle kingside: Tile in check\n";
+						}
+						else
+						{
+							std::cout<<"Black can castle kingside\n";
+							// Kingside castling is possible
+							Board* subBoard = new Board(*this);
+							Piece * rook = aBoard[7][7];
+							subBoard->move(piece->x,piece->y,6,7,false);
+							subBoard->move(rook->x,rook->y,5,7);
+							vBoard->push(subBoard);
+						}
 					}
 				}
-				// castle kingside
 			}
 		}
 	}
