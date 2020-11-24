@@ -15,6 +15,12 @@
 // use neural net to decide which states are best aka positional play
 // however to start out we can use simple material points system.
 
+// For neural net we can use pattern recognition on board states to recognise
+// "good" and "bad" states, and then encourage/avoid transitioning to them.
+// Alternatively we can abstract the game to a state hash and transition
+// commands. We could break the state up into other useful information too,
+// for example a piece's rank and file.
+
 #include <File/FileManagerStatic.hpp>
 
 #include <Container/Vector/Vector.hpp>
@@ -51,6 +57,9 @@
 #define BQUEEN 'Q'
 #define WKING 'k'
 #define BKING 'K'
+
+// We should convert the team defines to enum
+//enum eTeam {WHITE, BLACK, BOTH};
 
 RandomLehmer rng;
 

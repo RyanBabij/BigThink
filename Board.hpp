@@ -2,6 +2,10 @@
 
 #include <time.h>
 
+// Board store potential substates
+// They should also store previous states for replay and also makes some
+// analysis easier
+
 class Board
 {
 	Vector <Board*> vSubstates; // substates if current side moves
@@ -171,16 +175,32 @@ class Board
 			}
 		}
 		
+		// castling
+		// if player moves king 2-3 spaces, this is a request for castling.
+		
+		// en passant
+		
+		
 		movePiece->hasMoved=true;
 		
 		if (flipSideToMove)
 		{
 			sideToMove=!sideToMove;
+
+			// set all opponent pieces no longer vulnerable to en passant
+			Vector <Piece*> * vPiece = getAllPieces(!movePiece->team);
+			
+			for (int i=0;i<vPiece->size();++i)
+			{
+				(*vPiece)(i)->doubleMoved=false;
+			}
 		}
 		
 		//substates must be cleared/merged
 		clearSubs();
 		status=0;
+		
+
 		
 		return true;
 	}
@@ -308,6 +328,7 @@ class Board
 							// piece can move up 1 space. Make state for this.
 							Board* subBoard2 = new Board(*this);
 							subBoard2->move(piece->x,piece->y,piece->x,piece->y+2);
+							piece->doubleMoved=true;
 							vBoard->push(subBoard2);
 						}
 					}
@@ -339,21 +360,55 @@ class Board
 					vBoard->push(subBoard);
 				}
 			}
+			
+			// can it attack en passant?
+			// normally we can assume the en passant attack square is empty
+			// but in this case we will check
+			// en passant left
+			if (isSafe(piece->x-1,piece->y) && isSafe(piece->x-1,piece->y+1))
+			{
+				if ( aBoard[piece->x-1][piece->y] != 0 && aBoard[piece->x-1][piece->y]->team != piece->team &&
+				aBoard[piece->x-1][piece->y]->doubleMoved
+				&& aBoard[piece->x-1][piece->y+1]==0 )
+				{
+					// piece can move up 1 space. Make state for this.
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x-1,piece->y+1);
+					subBoard->aBoard[piece->x-1][piece->y] = 0;
+					subBoard->transitionName="Pawn capture";
+					vBoard->push(subBoard);
+				}
+			}
+			// en passant right
+			if (isSafe(piece->x+1,piece->y) && isSafe(piece->x+1,piece->y+1))
+			{
+				if ( aBoard[piece->x+1][piece->y] != 0 && aBoard[piece->x+1][piece->y]->team != piece->team &&
+				aBoard[piece->x+1][piece->y]->doubleMoved
+				&& aBoard[piece->x+1][piece->y+1]==0 )
+				{
+					// piece can move up 1 space. Make state for this.
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x+1,piece->y+1);
+					subBoard->aBoard[piece->x+1][piece->y] = 0;
+					subBoard->transitionName="Pawn capture";
+					vBoard->push(subBoard);
+				}
+			}
 		}
 		// black pawn, can move down 1 space, attack diagonally.
 		if (piece->getShortName() == 245)
 		{
-			// can it move up 1 space?
+			// can it move down 1 space?
 			if (isSafe(piece->x,piece->y-1))
 			{
 				if ( aBoard[piece->x][piece->y-1] == 0 )
 				{
-					// piece can move up 1 space. Make state for this.
+					// piece can move down 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x,piece->y-1);
 					vBoard->push(subBoard);
 					
-					// can it move up 2 spaces?
+					// can it move down 2 spaces?
 					if (piece->y==6 && isSafe(piece->x,piece->y-2))
 					{
 						if ( aBoard[piece->x][piece->y-2] == 0 )
@@ -361,6 +416,7 @@ class Board
 							// piece can move up 1 space. Make state for this.
 							Board* subBoard2 = new Board(*this);
 							subBoard2->move(piece->x,piece->y,piece->x,piece->y-2);
+							piece->doubleMoved=true;
 							vBoard->push(subBoard2);
 						}
 					}
@@ -387,6 +443,39 @@ class Board
 					// piece can move up 1 space. Make state for this.
 					Board* subBoard = new Board(*this);
 					subBoard->move(piece->x,piece->y,piece->x+1,piece->y-1);
+					vBoard->push(subBoard);
+				}
+			}
+			// can it attack en passant?
+			// normally we can assume the en passant attack square is empty
+			// but in this case we will check
+			// en passant left
+			if (isSafe(piece->x-1,piece->y) && isSafe(piece->x-1,piece->y-1))
+			{
+				if ( aBoard[piece->x-1][piece->y] != 0 && aBoard[piece->x-1][piece->y]->team != piece->team &&
+				aBoard[piece->x-1][piece->y]->doubleMoved
+				&& aBoard[piece->x-1][piece->y-1]==0 )
+				{
+					// piece can move up 1 space. Make state for this.
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x-1,piece->y-1);
+					subBoard->aBoard[piece->x-1][piece->y] = 0;
+					subBoard->transitionName="Pawn capture";
+					vBoard->push(subBoard);
+				}
+			}
+			// en passant right
+			if (isSafe(piece->x+1,piece->y) && isSafe(piece->x+1,piece->y-1))
+			{
+				if ( aBoard[piece->x+1][piece->y] != 0 && aBoard[piece->x+1][piece->y]->team != piece->team &&
+				aBoard[piece->x+1][piece->y]->doubleMoved
+				&& aBoard[piece->x+1][piece->y-1]==0 )
+				{
+					// piece can move up 1 space. Make state for this.
+					Board* subBoard = new Board(*this);
+					subBoard->move(piece->x,piece->y,piece->x+1,piece->y-1);
+					subBoard->aBoard[piece->x+1][piece->y] = 0;
+					subBoard->transitionName="Pawn capture";
 					vBoard->push(subBoard);
 				}
 			}

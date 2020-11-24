@@ -10,6 +10,8 @@ class Piece
 	
 	int materialValue;
 	
+	bool doubleMoved; // pawn moved 2 spaces and can be captured en passant
+	
 	int x,y;
 
 	Piece(std::string _name, unsigned char _shortName, bool _team, int _x, int _y, int _materialValue)
@@ -22,6 +24,7 @@ class Piece
 		x=_x;
 		y=_y;
 		materialValue=_materialValue;
+		doubleMoved=false;
 	}
 	std::string getName()
 	{
