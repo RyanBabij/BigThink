@@ -115,7 +115,9 @@ class Board
 		}
 		id=STATIC_ID++;
 		
-		clearSubs();
+		// this seems to cause a crash if you are assigning a substate
+		// for now I'll call it after assignment finishes.
+		//clearSubs();
 		
 		return board;
 	}
@@ -1436,18 +1438,11 @@ class Board
 	// into check.
 	Vector <Board*> * getLegalMoves(bool _team)
 	{
-		Vector <Board*> * vMove = getAllMoves(_team);
-		
-		if (vMove == 0)
-		{
-			std::cout<<"Error: No moveset vector returned.\n";
-			return 0;
-		}
-		
-		if (vMove->size() == 0)
+		generateSubs();
+
+		if (vSubstates.size() == 0)
 		{
 			std::cout<<"Error: No moves found.\n";
-			delete vMove;
 			return 0;
 		}
 		
@@ -1455,20 +1450,15 @@ class Board
 		Vector <Board*> * vLegal = new Vector <Board*>;
 		
 		// push only legal moves to the vector
-		for (int i=0; i<vMove->size(); ++i)
+		for (int i=0; i<vSubstates.size(); ++i)
 		{
-			if ( (*vMove)(i)->boardStatus() != WHITE_NO_KING
-			 && (*vMove)(i)->boardStatus() != BLACK_NO_KING )
+			if ( vSubstates(i)->boardStatus() != WHITE_NO_KING
+			 && vSubstates(i)->boardStatus() != BLACK_NO_KING )
 			{
-				vLegal->push( (*vMove)(i) );
-			}
-			else
-			{
-				delete (*vMove)(i);
+				vLegal->push( vSubstates(i) );
 			}
 		}
-		delete vMove;
-		
+
 		if ( vLegal->size() == 0 )
 		{
 			// there is no legal move to make...
@@ -1481,6 +1471,13 @@ class Board
 	
 	bool randomMove (bool _team)
 	{
+		generateSubs();
+		
+		if (vSubstates.size() == 0 )
+		{
+			return false;
+		}
+
 		// build legal move vector
 		Vector <Board*> * vLegal = getLegalMoves(_team);
 		
@@ -1488,14 +1485,12 @@ class Board
 		{
 			// there is no legal move to make...
 			// This is either a stalemate or checkmate.
-			vLegal->clearPtr();
 			delete vLegal;
 			return false;
 		}
 		
 		*this = *(*vLegal)(rng.rand(vLegal->size()));
-		
-		vLegal->clearPtr();
+		clearSubs();
 		
 		delete vLegal;
 		return true;
