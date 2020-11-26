@@ -6,6 +6,9 @@
 // They should also store previous states for replay and also makes some
 // analysis easier
 
+// Note: getLegalMoves and boardState need serious optimisation. Using them
+// causes huge slowdown in midgame. Calculated values should be cached.
+
 class Board
 {
 	Vector <Board*> vSubstates; // substates if current side moves
