@@ -92,7 +92,7 @@ class Board
 	
 	// Equals operator: Identify identical board states for pruning?
 	// Assignment operator: Copy board state.
-	Board operator=(const Board& board)
+	Board operator=( Board& board)
 	{
 		status=board.status;
 		sideToMove=board.sideToMove;
@@ -115,6 +115,18 @@ class Board
 		}
 		id=STATIC_ID++;
 		
+		//vSubstates.clearPtr();
+		//vSubstates2.clearPtr();
+		
+		if ( board.vSubstates.size() != 0)
+		{
+			vSubstates = board.vSubstates;
+		}
+		if ( board.vSubstates2.size() != 0)
+		{
+			vSubstates2 = board.vSubstates2;
+		}
+		
 		// this seems to cause a crash if you are assigning a substate
 		// for now I'll call it after assignment finishes.
 		//clearSubs();
@@ -134,6 +146,9 @@ class Board
 	// move piece from (x1,y1) to (x2,y2). Return false if invalid move.
 	// if must be the piece's team's turn, and the move should be valid
 	// flipSideToMove needs to be false when moving pieces for castling
+	
+	// calling this is bad because it requires modifying substates.
+	// better to simply find the matching substate and move to it.
 	bool move (int x1, int y1, int x2, int y2, bool flipSideToMove=true)
 	{
 		// assume any target piece is captured.
@@ -202,8 +217,6 @@ class Board
 		//substates must be cleared/merged
 		clearSubs();
 		status=0;
-		
-
 		
 		return true;
 	}
@@ -404,7 +417,7 @@ class Board
 			}
 		}
 		// black pawn, can move down 1 space, attack diagonally.
-		if (piece->getShortName() == 245)
+		else if (piece->getShortName() == 245)
 		{
 			// can it move down 1 space?
 			if (isSafe(piece->x,piece->y-1))
@@ -488,10 +501,8 @@ class Board
 				}
 			}
 		}
-		
-		
 		// knight, moves in L shape
-		if (piece->getShortName() == 'n' || piece->getShortName() == 'N')
+		else if (piece->getShortName() == 'n' || piece->getShortName() == 'N')
 		{
 			// left
 			if (isSafe(piece->x-2,piece->y+1))
@@ -581,7 +592,7 @@ class Board
 		}
 		
 		// rook, moves in straight line
-		if (piece->getShortName() == 'r' || piece->getShortName() == 'R')
+		else if (piece->getShortName() == 'r' || piece->getShortName() == 'R')
 		{
 			// down
 			for (int file = piece->y-1; file >=0; --file)
@@ -682,7 +693,7 @@ class Board
 		}
 		
 		// bishop, moves in diagonals
-		if (piece->getShortName() == 'B' || piece->getShortName() == 'b')
+		else if (piece->getShortName() == 'B' || piece->getShortName() == 'b')
 		{
 			// down-left
 			int file = piece->y-1;
@@ -803,7 +814,7 @@ class Board
 		}
 		
 		// queen, moves in diagonals and straight lines
-		if (piece->getShortName() == 'Q' || piece->getShortName() == 'q')
+		else if (piece->getShortName() == 'Q' || piece->getShortName() == 'q')
 		{
 			// down-left
 			int file = piece->y-1;
@@ -1020,7 +1031,7 @@ class Board
 		}
 		
 		// king, moves in diagonals and straight lines but only 1 tile
-		if (piece->getShortName() == 'K' || piece->getShortName() == 'k')
+		else if (piece->getShortName() == 'K' || piece->getShortName() == 'k')
 		{
 			// down-left
 			int rank = piece->x-1;
@@ -1490,7 +1501,7 @@ class Board
 		}
 		
 		*this = *(*vLegal)(rng.rand(vLegal->size()));
-		clearSubs();
+		//clearSubs();
 		
 		delete vLegal;
 		return true;
@@ -1499,86 +1510,43 @@ class Board
 	// Pick the best immediate move to reduce enemy material score.
 	// Todo: We need to account for promotion aka material gain, therefore
 	// we should calculate material gap between teams.
-	bool materialMove(bool _team)
+	// Note that if there isn't a single move that makes a material gain,
+	// a random move will be chosen.
+	bool greedyMove(bool _team)
 	{
-		std::string strTeam = "";
-		if (_team == WHITE)
-		{
-			std::cout<<"*** Material move: WHITE ***\n";
-			strTeam = "white";
-		}
-		else if (_team == BLACK)
-		{
-			std::cout<<"*** Material move: BLACK ***\n";
-			strTeam = "black";
-		}
+		generateSubs();
 		
-		// get all movable pieces
-		auto vPiece = getAllPieces(_team);
-
-		if (vPiece == 0)
-		{
-			std::cout<<"Error: No pieces found.\n";
-			return false;
-		}
-		
-		Vector <Board*> * vMove = new Vector <Board*>;
-		// get all moves for all pieces
-		for (int i2=0;i2<vPiece->size();++i2)
-		{
-			addAllMovesFrom((*vPiece)(i2),vMove);
-		}
-		delete vPiece;
-		std::cout<<"Found "<<vMove->size()<<" moves.\n";
-		
-		// pick move which lowers opponent's score the most.
-		
-		int currentOpponentScore = getMaterialScore(!_team);
-		Board* bestState = 0;
-		
-		if (vMove->size() == 0)
-		{
-			std::cout<<"Error: No "<<strTeam<<" moves found.\n";
-			return false;
-		}
-		
-		// Store list of moves of equal score, so we can select on randomly
-		Vector <Board*> vBestMoves;
-		int bestScore = 0;
-		int bestIndex = -1;
 		int materialGap = 0;
-		for (int i=0;i<vMove->size();++i)
+		int bestScore = 0;
+		Vector <int> vBestIndex;
+		
+		for (int i=0;i<vSubstates.size();++i)
 		{
 			// calculate material gap.
-			materialGap = (*vMove)(i)->getMaterialScore(_team) - (*vMove)(i)->getMaterialScore(!_team);
+			materialGap = vSubstates(i)->getMaterialScore(_team) - vSubstates(i)->getMaterialScore(!_team);
 			
-			if ( bestIndex == -1 || materialGap > bestScore)
+			if ( vBestIndex.size() == 0 || materialGap > bestScore)
 			{
 				bestScore = materialGap;
-				bestIndex = i;
-				vBestMoves.clear();
-				vBestMoves.push( (*vMove)(i) );
+				vBestIndex.clear();
+				vBestIndex.push(i);
 			}
+			// we found another good move of equivalent value
 			else if ( materialGap == bestScore)
 			{
-				bestIndex = i;
-				vBestMoves.push( (*vMove)(i) );
+				vBestIndex.push(i);
 			}
 		}
 		
-		if (bestIndex != -1)
+		if (vBestIndex.size()==0)
 		{
-			*this = *vBestMoves( rng.rand(vBestMoves.size()-1) );		
+			std::cout<<"Couldn't find a material move\n";
+			return false;
 		}
-		
-		vBestMoves.clear();
-		
-		for (int i=0;i<vMove->size();++i)
-		{
-			delete (*vMove)(i);
-		}
-		
-		return false;
+		int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
+		*this = *vSubstates( chosenIndex );
+		clearSubs();
+		return true;
 	}
 	
 	// find a move which results in best material gain over 2 turns...
@@ -1690,11 +1658,6 @@ class Board
 	// this should be done automatically by the Board class when required.
 	void generateSubs()
 	{
-		if ( vSubstates.size() > 0 && vSubstates2.size() > 0 )
-		{
-			return;
-		}
-		
 		// generate moves if current side moves
 		if ( vSubstates.size() == 0 )
 		{

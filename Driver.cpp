@@ -92,6 +92,26 @@ int moveBlackRandom()
 	return 0;
 }
 
+int moveBlackGreedy()
+{
+	if ( mainBoard.greedyMove(BLACK) == false )
+	{
+		// black is unable to move
+		// if we are in check, this is checkmate
+		if (mainBoard.boardStatus() != 0)
+		{
+			std::cout<<"Black is in checkmate, white wins.\n";
+			return 1;
+		}
+		else
+		{
+			std::cout<<"Stalemate\n";
+			return 2;
+		}
+	}
+	return 0;
+}
+
 void printScore()
 {
 	std::cout<<"Material scores: "<<mainBoard.getMaterialScore(WHITE)-1000
@@ -183,7 +203,7 @@ int main (int narg, char ** arg)
 				// }
 				//mainBoard.materialMove(WHITE);
 				//mainBoard.materialDepthMove(WHITE, 2);
-				if (mainBoard.skipTurn(WHITE) == false )
+				if (mainBoard.randomMove(WHITE) == false )
 				{
 					std::cout<<"White cannot move. Stalemate/checkmate.\n";
 					return 0;
@@ -195,7 +215,7 @@ int main (int narg, char ** arg)
 				
 				printScore();
 				
-				if (moveBlackRandom() != 0)
+				if (moveBlackGreedy() != 0)
 				{
 					std::cout<<"White wins\n";
 					return 0;
