@@ -9,5 +9,5 @@ Chess engine framework to test AI development. I play a bit of chess but I'm not
 	* Random moves (done)
 	* Greedy (done)
 	* n-depth search
-	* + heuristics
+	* heuristics
 	* neural net
