@@ -4,6 +4,10 @@ Chess engine framework to test AI development. I play a bit of chess but I'm not
 
 ## Things to do
 
-* Implement proper heuristics, n-depth, etc
-* Implement neural net for positional play
-* Add GUI
+* GUI???
+* Playstyles:
+** Random moves (done)
+** Greedy (done)
+** n-depth search
+** + heuristics
+** neural net
