@@ -215,6 +215,12 @@ int main (int narg, char ** arg)
 				
 				printScore();
 				
+				if (mainBoard.hasKing(BLACK) == false)
+				{
+					std::cout<<"Black king is ded.\n";
+					return 0;
+				}
+				
 				if (moveBlackGreedy() != 0)
 				{
 					std::cout<<"White wins\n";

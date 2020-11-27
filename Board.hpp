@@ -12,6 +12,7 @@
 class Board
 {
 	Vector <Board*> vSubstates; // substates if current side moves
+	Vector <Board*> vSubstatesLegal; // same as above but illegal moves removed
 	Vector <Board*> vSubstates2; // substates if opponent moves again
 	
 	std::string transitionName;
@@ -125,6 +126,10 @@ class Board
 		{
 			vSubstates = board.vSubstates;
 		}
+		if ( board.vSubstates.size() != 0)
+		{
+			vSubstatesLegal = board.vSubstatesLegal;
+		}
 		if ( board.vSubstates2.size() != 0)
 		{
 			vSubstates2 = board.vSubstates2;
@@ -210,11 +215,14 @@ class Board
 			// set all opponent pieces no longer vulnerable to en passant
 			Vector <Piece*> * vPiece = getAllPieces(!movePiece->team);
 			
-			for (int i=0;i<vPiece->size();++i)
+			if (vPiece!=0)
 			{
-				(*vPiece)(i)->doubleMoved=false;
+				for (int i=0;i<vPiece->size();++i)
+				{
+					(*vPiece)(i)->doubleMoved=false;
+				}
+				delete vPiece;
 			}
-			delete vPiece;
 		}
 		
 		//substates must be cleared/merged
@@ -1376,15 +1384,15 @@ class Board
 		return vPieces;
 	}
 	
-	int getNPieces (bool _team)
+	int getNPieces (const bool _team)
 	{
 		Vector <Piece*>* vPiece = getAllPieces(_team);
-		int n = vPiece->size();
 		
-		for (int i=0;i<vPiece->size();++i)
+		if (vPiece==0)
 		{
-			//delete (*vPiece)(i);
+			return 0;
 		}
+		const int n = vPiece->size();
 		vPiece->clear();
 		delete vPiece;
 		return n;
@@ -1404,6 +1412,10 @@ class Board
 	{
 		// get all movable pieces
 		auto vPiece = getAllPieces(_team);
+		if (vPiece==0)
+		{
+			return 0;
+		}
 		
 		Vector <Board*> * vMove = new Vector <Board*>;
 		// get all moves for all pieces
@@ -1563,7 +1575,7 @@ class Board
 		
 		return false;
 	}
-	
+		
 	char boardStatus()
 	{
 		// Check: If some of the next moves result in loss of king.
@@ -1610,6 +1622,34 @@ class Board
 		return status;
 	}
 	
+	// This is a simpler version, it only reports BLACK victory if there's no
+	// WHITE king, and vice-versa. Other states can be implied from this.
+	// Also reports stalemate.
+	void calculateBoardStatus()
+	{
+		
+		// check for stalemate endgame here (not enough pieces to checkmate)
+		
+		if ( getNPieces(WHITE) == 1 && getNPieces(BLACK) == 1)
+		{
+			status!=STALEMATE_MATERIAL;
+		}
+		
+		//stalemate: lack of material
+		
+		// check/checkmates
+		if (hasKing(BLACK) == false)
+		{
+			status |= BLACK_CHECK;
+			status |= BLACK_NO_KING;
+		}
+		if (hasKing(WHITE) == false)
+		{
+			status |= WHITE_CHECK;
+			status |= WHITE_NO_KING;
+		}
+	}
+	
 	bool hasState(unsigned char state)
 	{
 		return ((status & state) == state);
@@ -1622,6 +1662,10 @@ class Board
 		
 		// get all movable pieces
 		auto vPiece = getAllPieces(_team);
+		if (vPiece==0)
+		{
+			return 0;
+		}
 		
 		// sum material value
 		for (auto const& element : *vPiece)
@@ -1641,6 +1685,11 @@ class Board
 		if (vPiece == 0)
 		{
 			// null vector means 0 pieces
+			return false;
+		}
+		
+		if (vPiece->size() == 0)
+		{
 			return false;
 		}
 		
@@ -1666,40 +1715,59 @@ class Board
 		{
 			// get all movable pieces
 			auto vPiece = getAllPieces(sideToMove);
-
-			// get all moves for all pieces
-			for (int i2=0;i2<vPiece->size();++i2)
+			
+			if (vPiece!=0)
 			{
-				addAllMovesFrom((*vPiece)(i2),&vSubstates);
+				// get all moves for all pieces
+				for (int i2=0;i2<vPiece->size();++i2)
+				{
+					addAllMovesFrom((*vPiece)(i2),&vSubstates);
+				}
+				for (int i=0;i<vSubstates.size();++i)
+				{
+					vSubstates(i)->sideToMove=!sideToMove;
+				}
+				delete vPiece;
 			}
-			for (int i=0;i<vSubstates.size();++i)
-			{
-				vSubstates(i)->sideToMove=!sideToMove;
-			}
-			delete vPiece;
 		}
+		
+		// push only legal moves to the vector
+		for (int i=0; i<vSubstates.size(); ++i)
+		{
+			vSubstates(i)->calculateBoardStatus();
+			if ( vSubstates(i)->status != WHITE_NO_KING
+				&& vSubstates(i)->status != BLACK_NO_KING )
+			{
+				//vSubstatesLegal.push( vSubstates(i) );
+			}
+		}
+		
 		// generate moves if opponent moves again (to determine check)
 		if ( vSubstates2.size() == 0 )
 		{
 			// get all movable pieces
 			auto vPiece = getAllPieces(!sideToMove);
-
-			// get all moves for all pieces
-			for (int i2=0;i2<vPiece->size();++i2)
+			
+			if(vPiece!=0)
 			{
-				addAllMovesFrom((*vPiece)(i2),&vSubstates2);
+				// get all moves for all pieces
+				for (int i2=0;i2<vPiece->size();++i2)
+				{
+					addAllMovesFrom((*vPiece)(i2),&vSubstates2);
+				}
+				for (int i=0;i<vSubstates2.size();++i)
+				{
+					vSubstates2(i)->sideToMove=!sideToMove;
+				}
+				delete vPiece;
 			}
-			for (int i=0;i<vSubstates2.size();++i)
-			{
-				vSubstates2(i)->sideToMove=!sideToMove;
-			}
-			delete vPiece;
 		}
 	}
 	void clearSubs()
 	{
 		// recursively delete all substates
 		vSubstates.clearPtr();
+		vSubstatesLegal.clearPtr();
 		vSubstates2.clearPtr();
 	}
 };
