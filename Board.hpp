@@ -1462,6 +1462,7 @@ class Board
 	bool randomMove (bool _team)
 	{
 		generateSubs();
+		generateLegalMoves();
 
 		if (vSubstatesLegal.size() == 0)
 		{
@@ -1469,7 +1470,7 @@ class Board
 			return false;
 		}
 		const short int iMove = rng.rand(vSubstatesLegal.size()-1);
-		std::cout<<"Random move: "<<iMove<<"\n";
+		//std::cout<<"Random move: "<<iMove<<"\n";
 		
 		*this = *vSubstatesLegal(iMove);
 		clearSubs();
@@ -1632,7 +1633,7 @@ class Board
 	}
 
 	bool hasKing(bool _team)
-	{	
+	{
 		// get all movable pieces
 		Vector <Piece*>* vPiece = getAllPieces(_team);
 		
@@ -1657,6 +1658,28 @@ class Board
 			}
 		}
 		delete vPiece;
+		return false;
+	}
+	bool isCheck(bool _team)
+	{
+		// this causes performance issues because we need to generate 2 levels
+		// of substates. Maybe there is a way to improve this.
+		generateSubs();
+		
+		for (int i=0; i<vSubstates.size(); ++i)
+		{
+			if ( vSubstates(i)->hasKing(_team) == false )
+			{
+				return true;
+			}
+		}
+		for (int i=0; i<vSubstates2.size(); ++i)
+		{
+			if ( vSubstates2(i)->hasKing(_team) == false )
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 	
@@ -1685,23 +1708,10 @@ class Board
 				delete vPiece;
 			}
 			
-			std::cout<<"Generated "<<vSubstates.size()<<" substates.\n";
-			for (int i=0;i<vSubstates.size();++i)
-			{
-				vSubstatesLegal.push(vSubstates(i));
-			}
-			std::cout<<"Generated "<<vSubstatesLegal.size()<<" legal substates.\n";
-		}
-		
-		// push only legal moves to the vector
-		for (int i=0; i<vSubstates.size(); ++i)
-		{
-			vSubstates(i)->calculateBoardStatus();
-			if ( vSubstates(i)->status != WHITE_NO_KING
-				&& vSubstates(i)->status != BLACK_NO_KING )
-			{
-				//vSubstatesLegal.push( vSubstates(i) );
-			}
+			//std::cout<<"Generated "<<vSubstates.size()<<" substates.\n";
+			
+
+			//std::cout<<"Generated "<<vSubstatesLegal.size()<<" legal substates.\n";
 		}
 		
 		// generate moves if opponent moves again (to determine check)
@@ -1725,6 +1735,36 @@ class Board
 			}
 		}
 	}
+	
+	// this needs to exist outside of generateSubstates to prevent recursion
+	void generateLegalMoves()
+	{
+		if ( vSubstatesLegal.size() > 0 )
+		{
+			return;
+		}
+		// don't add moves which remove king
+		// don't add moves which put player into check
+		
+		for (int i=0;i<vSubstates.size();++i)
+		{
+			if (vSubstates(i)->hasKing(BLACK) == true &&
+				vSubstates(i)->hasKing(WHITE)== true)
+			{
+				if ( vSubstates(i)->isCheck(sideToMove) == false )
+				{
+					vSubstatesLegal.push(vSubstates(i));
+				}
+				else
+				{
+					std::cout<<"Movement into check found\n";
+				}
+				
+				
+			}
+		}
+	}
+	
 	void clearSubs()
 	{
 		// recursively delete all substates
