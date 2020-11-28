@@ -178,6 +178,12 @@ int main (int narg, char ** arg)
 				
 				printBoard();
 				
+				if (mainBoard.hasState(STALEMATE_MATERIAL))
+				{
+					std::cout<<"Stalemate: Lack of material.\n";
+					return 0;
+				}
+				
 				if ( mainBoard.hasState(WHITE_CHECK) )
 				{
 					std::cout<<"White is in check/checkmate.\n";
@@ -203,7 +209,7 @@ int main (int narg, char ** arg)
 				// }
 				//mainBoard.materialMove(WHITE);
 				//mainBoard.materialDepthMove(WHITE, 2);
-				if (mainBoard.randomMove(WHITE) == false )
+				if (mainBoard.greedyMove(WHITE) == false )
 				{
 					std::cout<<"White cannot move. Stalemate/checkmate.\n";
 					return 0;
@@ -215,13 +221,19 @@ int main (int narg, char ** arg)
 				
 				printScore();
 				
+				if (mainBoard.hasState(STALEMATE_MATERIAL))
+				{
+					std::cout<<"Stalemate: Lack of material.\n";
+					return 0;
+				}
+				
 				if (mainBoard.hasKing(BLACK) == false)
 				{
 					std::cout<<"Black king is ded.\n";
 					return 0;
 				}
 				
-				if (moveBlackRandom() != 0)
+				if (moveBlackGreedy() != 0)
 				{
 					std::cout<<"White wins\n";
 					return 0;

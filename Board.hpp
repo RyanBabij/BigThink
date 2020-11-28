@@ -304,6 +304,27 @@ class Board
 		return (aBoard[_x][_y]);
 	}
 	
+	bool hasPiece(bool _team, unsigned char _piece, short int _amount=1)
+	{
+		auto vPiece = getAllPieces(_team);
+		
+		int count = 0;
+		
+		for (int i=0;i<vPiece->size();++i)
+		{
+			if ( (*vPiece)(i)->getShortName() == _piece )
+			{
+				++count;
+			}
+			if ( count == _amount )
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	// return true if the team can send a piece to this tile.
 	// for now we do this by generating sub boards and just looking to
 	// see if a substate has a piece there
@@ -1405,6 +1426,38 @@ class Board
 		// * Rook
 		// * 2 bishops
 		// * knight and bishop
+		
+		// stalemate if both sides only have 1 piece (king)
+		if (getNPieces(WHITE) < 2 && getNPieces(BLACK) < 2)
+		{
+			return false;
+		}
+		// checkmate is possible if 1 side has a pawn
+		else if (hasPiece(WHITE,WPAWN) || hasPiece(BLACK,BPAWN))
+		{
+			return true;
+		}
+		// checkmate is possible if either side has a queen
+		else if (hasPiece(WHITE,WQUEEN) || hasPiece(BLACK,BQUEEN))
+		{
+			return true;
+		}
+		// checkmate is possible if either side has a rook
+		else if (hasPiece(WHITE,WROOK) || hasPiece(BLACK,BROOK))
+		{
+			return true;
+		}
+		// checkmate is possible if either side has 2 bishops
+		else if (hasPiece(WHITE,WBISHOP,2) || hasPiece(BLACK,BBISHOP,2))
+		{
+			return true;
+		}
+		// checkmate is possible if either side has a knight and bishop
+		else if ( (hasPiece(WHITE,WBISHOP)&&hasPiece(WHITE,WKNIGHT)) ||
+		(hasPiece(BLACK,BBISHOP)&&hasPiece(BLACK,BKNIGHT))   )
+		{
+			return true;
+		}
 		return false;
 	}
 	
@@ -1485,15 +1538,16 @@ class Board
 	bool greedyMove(bool _team)
 	{
 		generateSubs();
+		generateLegalMoves();
 		
 		int materialGap = 0;
 		int bestScore = 0;
 		Vector <int> vBestIndex;
 		
-		for (int i=0;i<vSubstates.size();++i)
+		for (int i=0;i<vSubstatesLegal.size();++i)
 		{
 			// calculate material gap.
-			materialGap = vSubstates(i)->getMaterialScore(_team) - vSubstates(i)->getMaterialScore(!_team);
+			materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
 			
 			if ( vBestIndex.size() == 0 || materialGap > bestScore)
 			{
@@ -1514,7 +1568,7 @@ class Board
 			return false;
 		}
 		int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
-		*this = *vSubstates( chosenIndex );
+		*this = *vSubstatesLegal( chosenIndex );
 		clearSubs();
 		return true;
 	}
@@ -1537,9 +1591,9 @@ class Board
 		// Checkmate: If no substate avoids check
 		// check for stalemate endgame here (not enough pieces to checkmate)
 		
-		if ( getNPieces(WHITE) == 1 && getNPieces(BLACK) == 1)
+		if ( checkMatePossible() == false )
 		{
-			status!=STALEMATE_MATERIAL;
+			status|=STALEMATE_MATERIAL;
 		}
 		
 		//stalemate: lack of material
@@ -1607,6 +1661,7 @@ class Board
 	
 	bool hasState(unsigned char state)
 	{
+		boardStatus();
 		return ((status & state) == state);
 	}
 	
