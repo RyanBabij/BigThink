@@ -1458,67 +1458,21 @@ class Board
 		delete vMove;
 		return true;
 	}
-	
-	// return list of legal board states.
-	// basically all states that don't involve a side putting themself
-	// into check.
-	Vector <Board*> * getLegalMoves(bool _team)
-	{
-		generateSubs();
 
-		if (vSubstates.size() == 0)
-		{
-			std::cout<<"Error: No moves found.\n";
-			return 0;
-		}
-		
-		// build legal move vector
-		Vector <Board*> * vLegal = new Vector <Board*>;
-		
-		// push only legal moves to the vector
-		for (int i=0; i<vSubstates.size(); ++i)
-		{
-			if ( vSubstates(i)->boardStatus() != WHITE_NO_KING
-			 && vSubstates(i)->boardStatus() != BLACK_NO_KING )
-			{
-				vLegal->push( vSubstates(i) );
-			}
-		}
-
-		if ( vLegal->size() == 0 )
-		{
-			// there is no legal move to make...
-			// This is either a stalemate or checkmate.
-			delete vLegal;
-			return 0;
-		}
-		return vLegal;
-	}
-	
 	bool randomMove (bool _team)
 	{
 		generateSubs();
-		
-		if (vSubstates.size() == 0 )
-		{
-			return false;
-		}
 
-		// build legal move vector
-		Vector <Board*> * vLegal = getLegalMoves(_team);
-		
-		if ( vLegal == 0 || vLegal->size() == 0 )
+		if (vSubstatesLegal.size() == 0)
 		{
-			// there is no legal move to make...
-			// This is either a stalemate or checkmate.
-			delete vLegal;
+			std::cout<<"No legal substates\n";
 			return false;
 		}
+		const short int iMove = rng.rand(vSubstatesLegal.size()-1);
+		std::cout<<"Random move: "<<iMove<<"\n";
 		
-		*this = *(*vLegal)(rng.rand(vLegal->size()));
-		//clearSubs();
-		
-		delete vLegal;
+		*this = *vSubstatesLegal(iMove);
+		clearSubs();
 		return true;
 	}
 	
@@ -1713,6 +1667,7 @@ class Board
 		// generate moves if current side moves
 		if ( vSubstates.size() == 0 )
 		{
+			vSubstatesLegal.clear();
 			// get all movable pieces
 			auto vPiece = getAllPieces(sideToMove);
 			
@@ -1729,6 +1684,13 @@ class Board
 				}
 				delete vPiece;
 			}
+			
+			std::cout<<"Generated "<<vSubstates.size()<<" substates.\n";
+			for (int i=0;i<vSubstates.size();++i)
+			{
+				vSubstatesLegal.push(vSubstates(i));
+			}
+			std::cout<<"Generated "<<vSubstatesLegal.size()<<" legal substates.\n";
 		}
 		
 		// push only legal moves to the vector
@@ -1767,7 +1729,9 @@ class Board
 	{
 		// recursively delete all substates
 		vSubstates.clearPtr();
-		vSubstatesLegal.clearPtr();
+		// vSubstatesLegal is a subset of vSubstates so it doesn't need to be
+		// deleted
+		vSubstatesLegal.clear();
 		vSubstates2.clearPtr();
 	}
 };
