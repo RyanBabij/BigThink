@@ -17,6 +17,7 @@ class Board
 	Vector <Board*> vSubstatesLegal2; // same as above but illegal moves removed
 	
 	std::string transitionName;
+	int score; // score for this state
 	
 	public:
 	bool sideToMove;
@@ -47,6 +48,7 @@ class Board
 	Board(bool _sideToMove = WHITE)
 	{
 		status=0;
+		score = -1;
 		
 		sideToMove=_sideToMove;
 		// wipe the board array
@@ -1537,8 +1539,7 @@ class Board
 	// we should calculate material gap between teams.
 	// Note that if there isn't a single move that makes a material gain,
 	// a random move will be chosen.
-	
-	//Todo: Value checkmate
+	// it will also checkmate if possible
 	bool greedyMove(bool _team)
 	{
 		generateSubs();
@@ -1583,21 +1584,58 @@ class Board
 	}
 	
 	// find a move which results in best material gain over 2 turns...
-	bool materialDepthMove(bool _team, int depth)
+	
+	// breadth should not be limited on first level otherwise it might discard
+	// critical moves
+	
+	// recurse and assign scores to each state.
+	// then move towards the best score.
+	bool depthMove(bool _team, int _depth, int _breadth, int _currentLevel=0)
 	{
-		// generate our moves
 		generateSubs();
-		
-		// generate adversary moves.
-		for (int i=0; i<vSubstates.size(); ++i)
+		generateLegalMoves();
+		if ( _currentLevel != 0 )
 		{
-			generateSubs();
+			pruneRandomly(_breadth);
+		}
+		++_currentLevel;
+		
+		int materialGap = 0;
+		//int bestScore = 0;
+		Vector <int> vBestIndex;
+		
+		for (int i=0;i<vSubstatesLegal.size();++i)
+		{
+			// calculate material gap.
+			materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
+			//std::cout<<"Material gap: "<<materialGap<<"\n";
+			
+			materialGap+=vSubstatesLegal(i)->getPositionalScore(_team);
+			
+			//std::cout<<"Material gap + positional score: "<<materialGap<<"\n";
+			
+			if ( vBestIndex.size() == 0 || materialGap > score)
+			{
+				score = materialGap;
+				vBestIndex.clear();
+				vBestIndex.push(i);
+			}
+			// we found another good move of equivalent value
+			else if ( materialGap == score)
+			{
+				vBestIndex.push(i);
+			}
 		}
 		
-		
-		// pick a move which doesn't give the adversary a good move.
-		
-		return false;
+		if (vBestIndex.size()==0)
+		{
+			std::cout<<"Couldn't find a material move\n";
+			return false;
+		}
+		int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
+		*this = *vSubstatesLegal( chosenIndex );
+		clearSubs();
+		return true;
 	}
 		
 	char boardStatus()
@@ -1683,7 +1721,7 @@ class Board
 	// calculate the score for this board state based on material.
 	int getMaterialScore(bool _team)
 	{
-		int score = 0;
+		int _score = 0;
 		
 		// get all movable pieces
 		auto vPiece = getAllPieces(_team);
@@ -1695,11 +1733,11 @@ class Board
 		// sum material value
 		for (auto const& element : *vPiece)
 		{
-			score += element->materialValue;
+			_score += element->materialValue;
 		}
 		delete vPiece;
 
-		return score;
+		return _score;
 	}
 	
 	// calculate the score for this board state based on position
@@ -1718,6 +1756,29 @@ class Board
 			//return 1;
 		}
 		return 0;
+	}
+	
+	// determine an overall score for this board state.
+	void calculateScore(bool _team)
+	{
+		score = getMaterialScore(_team)+getPositionalScore(_team);
+	}
+	
+	// randomly delete board states to keep breadth down to managable size
+	void pruneRandomly(int _max)
+	{
+		generateSubs();
+		generateLegalMoves();
+		
+		while ( vSubstatesLegal.size() > _max )
+		{
+			// delete a random substate
+			int randomSlot = rng.rand(vSubstatesLegal.size()-1);
+			// nothing should be deleted from vSubstatesLegal as it may still be
+			// needed in vSubstates.
+			vSubstatesLegal.eraseSlot(randomSlot);
+		}
+		
 	}
 
 	bool hasKing(bool _team)
@@ -1822,6 +1883,7 @@ class Board
 	
 	// generate all possible moves and store in memory
 	// this should be done automatically by the Board class when required.
+	// Note that there's no point finding substates from illegal moves.
 	void generateSubs()
 	{
 		// generate moves if current side moves
@@ -1875,7 +1937,7 @@ class Board
 	}
 	
 	// this needs to exist outside of generateSubstates to prevent recursion
-	void generateLegalMoves()
+	void generateLegalMoves(bool _calculateScores=false)
 	{
 		if ( vSubstatesLegal.size() == 0 )
 		{
@@ -1890,6 +1952,10 @@ class Board
 					if ( vSubstates(i)->isCheck(sideToMove) == false )
 					{
 						vSubstatesLegal.push(vSubstates(i));
+						if ( _calculateScores )
+						{
+							vSubstates(i)->calculateScore(vSubstates(i)->sideToMove);
+						}
 					}
 					else
 					{
