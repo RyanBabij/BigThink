@@ -14,6 +14,7 @@ class Board
 	Vector <Board*> vSubstates; // substates if current side moves
 	Vector <Board*> vSubstatesLegal; // same as above but illegal moves removed
 	Vector <Board*> vSubstates2; // substates if opponent moves again
+	Vector <Board*> vSubstatesLegal2; // same as above but illegal moves removed
 	
 	std::string transitionName;
 	
@@ -125,14 +126,12 @@ class Board
 		if ( board.vSubstates.size() != 0)
 		{
 			vSubstates = board.vSubstates;
-		}
-		if ( board.vSubstates.size() != 0)
-		{
 			vSubstatesLegal = board.vSubstatesLegal;
 		}
 		if ( board.vSubstates2.size() != 0)
 		{
 			vSubstates2 = board.vSubstates2;
+			vSubstatesLegal2 = board.vSubstatesLegal2;
 		}
 		
 		// this seems to cause a crash if you are assigning a substate
@@ -249,6 +248,9 @@ class Board
 		{
 			aBoard[i][1] = new Piece ("pawn", WPAWN, WHITE, i, 1, 1);
 			aBoard[i][6] = new Piece("pawn", BPAWN, BLACK, i, 6, 1);
+			
+			
+			//aBoard[i][1] = new Piece ("queen", WQUEEN, WHITE, i, 1, 1);
 		}
 		
 		aBoard[0][0] = new Piece ("rook", WROOK, WHITE, 0,0,5);
@@ -1535,6 +1537,8 @@ class Board
 	// we should calculate material gap between teams.
 	// Note that if there isn't a single move that makes a material gain,
 	// a random move will be chosen.
+	
+	//Todo: Value checkmate
 	bool greedyMove(bool _team)
 	{
 		generateSubs();
@@ -1548,6 +1552,11 @@ class Board
 		{
 			// calculate material gap.
 			materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
+			//std::cout<<"Material gap: "<<materialGap<<"\n";
+			
+			materialGap+=vSubstatesLegal(i)->getPositionalScore(_team);
+			
+			//std::cout<<"Material gap + positional score: "<<materialGap<<"\n";
 			
 			if ( vBestIndex.size() == 0 || materialGap > bestScore)
 			{
@@ -1576,11 +1585,17 @@ class Board
 	// find a move which results in best material gain over 2 turns...
 	bool materialDepthMove(bool _team, int depth)
 	{
+		// generate our moves
 		generateSubs();
 		
+		// generate adversary moves.
 		for (int i=0; i<vSubstates.size(); ++i)
 		{
+			generateSubs();
 		}
+		
+		
+		// pick a move which doesn't give the adversary a good move.
 		
 		return false;
 	}
@@ -1686,6 +1701,24 @@ class Board
 
 		return score;
 	}
+	
+	// calculate the score for this board state based on position
+	// this includes check/checkmate.
+	int getPositionalScore(bool _team)
+	{
+		if (isCheckmate(!_team))
+		{
+			// checkmate should obviously be the maximum score.
+			return 2000;
+		}
+		else if (isCheck(!_team))
+		{
+			// for now I'll make check about the same value as a pawn capture.
+			// however in reality it might not be that valuable.
+			//return 1;
+		}
+		return 0;
+	}
 
 	bool hasKing(bool _team)
 	{
@@ -1715,11 +1748,60 @@ class Board
 		delete vPiece;
 		return false;
 	}
+	
+	bool isCheckmate(bool _team)
+	{
+		//return false;
+		generateSubs();
+		// calling generateLegalMoves() here seems to cause recursion issues
+		// but not if we only call when finding check, not sure why
+		
+		if (isCheck(_team))
+		{
+			//we are in check
+			//std::cout<<"Check found, looking for checkmate\n";
+			generateLegalMoves();
+
+			if ( _team == sideToMove )
+			{
+				if (vSubstatesLegal.size() == 0 )
+				{
+					// we can't make any legal moves (all moves are in check)
+					// therefore we are in checkmate.
+					std::cout<<"Checkmate found 1\n";
+					
+					//std::cout<<"Possible checkmate found 1\n";
+					//std::cout<<"Legal substates: "<<vSubstatesLegal.size()<<
+					//", "<<vSubstatesLegal2.size()<<"\n";
+					return true;
+				}
+			}
+			// else
+			// {
+				// if (vSubstatesLegal2.size() == 0 )
+				// {
+					// // we can't make any legal moves (all moves are in check)
+					// // therefore we are in checkmate.
+					
+					// std::cout<<"Possible checkmate found 2\n";
+					// std::cout<<"Legal substates: "<<vSubstatesLegal.size()<<
+					// ", "<<vSubstatesLegal2.size()<<"\n";
+					// return true;
+				// }
+			// }
+			
+
+		}
+		
+		return false;
+	}
+	
 	bool isCheck(bool _team)
 	{
 		// this causes performance issues because we need to generate 2 levels
 		// of substates. Maybe there is a way to improve this.
 		generateSubs();
+		//generateLegalMoves();
 		
 		for (int i=0; i<vSubstates.size(); ++i)
 		{
@@ -1772,6 +1854,7 @@ class Board
 		// generate moves if opponent moves again (to determine check)
 		if ( vSubstates2.size() == 0 )
 		{
+			vSubstatesLegal2.clear();
 			// get all movable pieces
 			auto vPiece = getAllPieces(!sideToMove);
 			
@@ -1794,30 +1877,53 @@ class Board
 	// this needs to exist outside of generateSubstates to prevent recursion
 	void generateLegalMoves()
 	{
-		if ( vSubstatesLegal.size() > 0 )
+		if ( vSubstatesLegal.size() == 0 )
 		{
-			return;
-		}
-		// don't add moves which remove king
-		// don't add moves which put player into check
-		
-		for (int i=0;i<vSubstates.size();++i)
-		{
-			if (vSubstates(i)->hasKing(BLACK) == true &&
-				vSubstates(i)->hasKing(WHITE)== true)
+			// don't add moves which remove king
+			// don't add moves which put player into check
+			
+			for (int i=0;i<vSubstates.size();++i)
 			{
-				if ( vSubstates(i)->isCheck(sideToMove) == false )
+				if (vSubstates(i)->hasKing(BLACK) == true &&
+					vSubstates(i)->hasKing(WHITE)== true)
 				{
-					vSubstatesLegal.push(vSubstates(i));
+					if ( vSubstates(i)->isCheck(sideToMove) == false )
+					{
+						vSubstatesLegal.push(vSubstates(i));
+					}
+					else
+					{
+						//std::cout<<"Movement into check found\n";
+					}
+					
+					
 				}
-				else
-				{
-					std::cout<<"Movement into check found\n";
-				}
-				
-				
 			}
 		}
+		if ( vSubstatesLegal2.size() == 0 )
+		{
+			// don't add moves which remove king
+			// don't add moves which put player into check
+			
+			for (int i=0;i<vSubstates2.size();++i)
+			{
+				if (vSubstates2(i)->hasKing(BLACK) == true &&
+					vSubstates2(i)->hasKing(WHITE)== true)
+				{
+					if ( vSubstates2(i)->isCheck(sideToMove) == false )
+					{
+						vSubstatesLegal2.push(vSubstates2(i));
+					}
+					else
+					{
+						//std::cout<<"Movement into check found\n";
+					}
+					
+					
+				}
+			}
+		}
+
 	}
 	
 	void clearSubs()
@@ -1828,6 +1934,7 @@ class Board
 		// deleted
 		vSubstatesLegal.clear();
 		vSubstates2.clearPtr();
+		vSubstatesLegal2.clear();
 	}
 };
 
