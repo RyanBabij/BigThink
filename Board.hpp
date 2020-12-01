@@ -1605,9 +1605,9 @@ class Board
 		}
 		else
 		{
-			std::cout<<"dmove: "<<STATIC_N_SEARCH<<": "<<_depth<<", "<<
-			_breadth<<".\n";
-			std::cout<<getState(true)<<"\n\n";
+			//std::cout<<"dmove: "<<STATIC_N_SEARCH<<": "<<_depth<<", "<<
+			//_breadth<<".\n";
+			//std::cout<<getState(true)<<"\n\n";
 			++STATIC_N_SEARCH;
 		}
 		
@@ -1673,6 +1673,42 @@ class Board
 			// just pick a random substate for now.
 			std::cout<<"Finished. Picking best substate\n";
 			
+			Board* best = pickBest(_depth);
+			std::cout<<"Pick best returned:\n";
+			
+			if ( best != 0 )
+			{
+				//std::cout<<"Depthsearch got a board:\n";
+				std::cout<<best->getState(true)<<"\n\n";
+				
+				for (int i=0;i<_depth;++i)
+				{
+					std::cout<<"Working back up:\n";
+					best = best->parent;
+					
+					if (best==0)
+					{
+						std::cout<<"Error: bad parent\n";
+					}
+					else
+					{
+						std::cout<<best->getState(true)<<"\n\n";
+					}
+					
+				}
+				
+				*this = *best;
+				clearSubs();
+				return true;
+			}
+			else
+			{
+				std::cout<<"Depthsearch didn't get a board.\n";
+				return false;
+			}
+			
+			
+			
 			//pickBest(_depth);
 			
 			// int chosenIndex = vSubstatesLegal.size()-1;
@@ -1690,18 +1726,44 @@ class Board
 			int bestScore = 0;
 			Vector <int> vBestIndex;
 			
+			Vector <Board*> vBestBoards;
+			
 			for (int i=0;i<vSubstatesLegal.size();++i)
 			{
 				// build vector of best boards and pick best.
-				pickBest(_depth,_currentLevel+1);
+				// Make sure to account for null ptrs here
+				Board * b = vSubstatesLegal(i)->pickBest(_depth,_currentLevel+1);
+				
+				if ( b != 0 )
+				{
+					if ( vBestBoards.size() == 0 || b->score > bestScore )
+					{
+						vBestBoards.clear();
+						vBestBoards.push(b);
+						bestScore = b->score;
+					}
+					else if (b->score == bestScore)
+					{
+						vBestBoards.push(b);
+					}
+				}
 			}
+			
+			if (vBestBoards.size() == 0)
+			{
+				std::cout<<"Error: We couldn't find a best board.\n";
+				return 0;
+			}
+			std::cout<<"pickBest: returning board\n";
+			int randomSlot = rng.rand(vBestBoards.size()-1);
+			return vBestBoards(randomSlot);
 		}
 		else if ( _currentLevel < _depth )
 		{
 			// calculate scores for all subs
 			for (int i=0;i<vSubstatesLegal.size();++i)
 			{
-				return pickBest(_depth,_currentLevel+1);
+				return vSubstatesLegal(i)->pickBest(_depth,_currentLevel+1);
 			}
 		}
 		else if (_currentLevel==_depth)
