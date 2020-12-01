@@ -1590,6 +1590,48 @@ class Board
 		return true;
 	}
 	
+	// return the best substate on this level based on score
+	Board* bestSub(const bool _team)
+	{
+		//generateSubs();
+		//generateLegalMoves();
+		
+		int materialGap = 0;
+		int bestScore = 0;
+		Vector <int> vBestIndex;
+		
+		for (int i=0;i<vSubstatesLegal.size();++i)
+		{
+			// calculate material gap.
+			materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
+			//std::cout<<"Material gap: "<<materialGap<<"\n";
+			
+			materialGap+=vSubstatesLegal(i)->getPositionalScore(_team);
+			
+			//std::cout<<"Material gap + positional score: "<<materialGap<<"\n";
+			
+			if ( vBestIndex.size() == 0 || materialGap > bestScore)
+			{
+				bestScore = materialGap;
+				vBestIndex.clear();
+				vBestIndex.push(i);
+			}
+			// we found another good move of equivalent value
+			else if ( materialGap == bestScore)
+			{
+				vBestIndex.push(i);
+			}
+		}
+		
+		if (vBestIndex.size()==0)
+		{
+			std::cout<<"Couldn't find a material move\n";
+			return 0;
+		}
+		int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
+		return vSubstatesLegal( chosenIndex );
+	}
+	
 	// find a move which results in best material gain over 2 turns...
 	
 	// breadth should not be limited on first level otherwise it might discard
@@ -1597,7 +1639,11 @@ class Board
 	
 	// recurse and assign scores to each state.
 	// then move towards the best score.
-	bool depthMove(bool _team, int _depth, int _breadth, int _currentLevel=0)
+	
+	// you can emulate greedy search using depth=0.
+	// Note that the maximum possible number of moves for a single side
+	// seems to be around 218.
+	bool depthMove(bool _team, int _depth, int _breadth=999, int _currentLevel=0)
 	{
 		if (_currentLevel == 0)
 		{
@@ -1673,17 +1719,17 @@ class Board
 			// just pick a random substate for now.
 			std::cout<<"Finished. Picking best substate\n";
 			
-			Board* best = pickBest(_depth);
-			std::cout<<"Pick best returned:\n";
+			Board* best = pickBest(_team, _depth);
+			//std::cout<<"Pick best returned:\n";
 			
 			if ( best != 0 )
 			{
 				//std::cout<<"Depthsearch got a board:\n";
-				std::cout<<best->getState(true)<<"\n\n";
+				//std::cout<<best->getState(true)<<"\n\n";
 				
 				for (int i=0;i<_depth;++i)
 				{
-					std::cout<<"Working back up:\n";
+					//std::cout<<"Working back up:\n";
 					best = best->parent;
 					
 					if (best==0)
@@ -1692,7 +1738,7 @@ class Board
 					}
 					else
 					{
-						std::cout<<best->getState(true)<<"\n\n";
+						//std::cout<<best->getState(true)<<"\n\n";
 					}
 					
 				}
@@ -1719,8 +1765,15 @@ class Board
 	}
 	
 	// recurse and return best substate at given level
-	Board* pickBest(int _depth, int _currentLevel=0)
+	Board* pickBest(const bool _team, int _depth, int _currentLevel=0)
 	{
+		// simply return the best substate without recursing
+		if ( _depth==0 )
+		{
+			return bestSub(_team);
+		}
+		
+		
 		if ( _currentLevel == 0)
 		{
 			int bestScore = 0;
@@ -1754,7 +1807,7 @@ class Board
 				std::cout<<"Error: We couldn't find a best board.\n";
 				return 0;
 			}
-			std::cout<<"pickBest: returning board\n";
+			//std::cout<<"pickBest: returning board\n";
 			int randomSlot = rng.rand(vBestBoards.size()-1);
 			return vBestBoards(randomSlot);
 		}
@@ -1789,7 +1842,7 @@ class Board
 				{
 					return 0;
 				}
-				std::cout<<"Returning best\n";
+				//std::cout<<"Returning best\n";
 				int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
 				return (vSubstatesLegal( chosenIndex ));
 			}

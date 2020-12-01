@@ -197,8 +197,8 @@ int main (int narg, char ** arg)
 		// process input here.
 		if (input.find('b') != std::string::npos)
 		{
-			std::ios_base::sync_with_stdio(false);
-			std::cin.tie(NULL);
+			// std::ios_base::sync_with_stdio(false);
+			// std::cin.tie(NULL);
 	
 			// play entire game until somebody wins
 			int i=1;
@@ -264,7 +264,7 @@ int main (int narg, char ** arg)
 					return 0;
 				}
 				
-				if (moveBlackDepth(2,8) != 0)
+				if (moveBlackDepth(0,99) != 0)
 				{
 					std::cout<<"White wins\n";
 					return 0;
