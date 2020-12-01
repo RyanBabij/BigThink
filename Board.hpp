@@ -19,6 +19,8 @@ class Board
 	std::string transitionName;
 	int score; // score for this state
 	
+	Board* parent;
+	
 	public:
 	bool sideToMove;
 	
@@ -26,6 +28,7 @@ class Board
 	char status; // should be calculated whenever a board is generated.
 	int id;
 	static int STATIC_ID;
+	static int STATIC_N_SEARCH;
 	
 	~Board()
 	{
@@ -62,6 +65,7 @@ class Board
 		transitionName="";
 		
 		id=STATIC_ID++;
+		parent=0;
 	}
 	Board(const Board& board) // copy constructor
 	//(this should actually be a shift to substate)
@@ -73,6 +77,8 @@ class Board
 		// I assume the default copy constructor copys the pointers in aBoard,
 		// but doesn't copy the Piece objects.
 		sideToMove=board.sideToMove;
+		
+		parent=board.parent;
 		
 		// wipe the board array
 		for (int y=0;y<8;++y)
@@ -103,6 +109,7 @@ class Board
 	{
 		status=board.status;
 		sideToMove=board.sideToMove;
+		parent=board.parent;
 		
 		// wipe the board array
 		for (int y=0;y<8;++y)
@@ -1592,50 +1599,141 @@ class Board
 	// then move towards the best score.
 	bool depthMove(bool _team, int _depth, int _breadth, int _currentLevel=0)
 	{
+		if (_currentLevel == 0)
+		{
+			STATIC_N_SEARCH=0;
+		}
+		else
+		{
+			std::cout<<"dmove: "<<STATIC_N_SEARCH<<": "<<_depth<<", "<<
+			_breadth<<".\n";
+			std::cout<<getState(true)<<"\n\n";
+			++STATIC_N_SEARCH;
+		}
+		
+		//return randomMove(_team);
+		//return false;
+		//std::cout<<"Depthmove "<<_depth<<", "<<_breadth<<", "<<_currentLevel<<"\n";
+		if ( _currentLevel > _depth )
+		{
+			//std::cout<<"Recursion finished.\n";
+			return true;
+		}
+		
 		generateSubs();
 		generateLegalMoves();
-		if ( _currentLevel != 0 )
+		//if ( _currentLevel != 0 )
 		{
 			pruneRandomly(_breadth);
+			// prune best
 		}
-		++_currentLevel;
 		
-		int materialGap = 0;
-		//int bestScore = 0;
+		if (vSubstatesLegal.size() == 0)
+		{
+			std::cout<<"No legal moves\n";
+			return false;
+		}
+		
+		//int materialGap = 0;
+		int bestScore = 0;
 		Vector <int> vBestIndex;
 		
+		// calculate scores for all subs
 		for (int i=0;i<vSubstatesLegal.size();++i)
 		{
 			// calculate material gap.
-			materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
-			//std::cout<<"Material gap: "<<materialGap<<"\n";
+			vSubstatesLegal(i)->calculateScore(_team);
 			
-			materialGap+=vSubstatesLegal(i)->getPositionalScore(_team);
 			
-			//std::cout<<"Material gap + positional score: "<<materialGap<<"\n";
-			
-			if ( vBestIndex.size() == 0 || materialGap > score)
+			if ( vBestIndex.size() == 0 || vSubstatesLegal(i)->score > bestScore)
 			{
-				score = materialGap;
+				bestScore = vSubstatesLegal(i)->score;
 				vBestIndex.clear();
 				vBestIndex.push(i);
 			}
 			// we found another good move of equivalent value
-			else if ( materialGap == score)
+			else if ( vSubstatesLegal(i)->score == bestScore)
 			{
 				vBestIndex.push(i);
 			}
+			vSubstatesLegal(i)->depthMove(_team, _depth, _breadth, _currentLevel+1);
 		}
 		
-		if (vBestIndex.size()==0)
+		
+		// select best substate
+		//int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
+		//*this = *vSubstatesLegal( chosenIndex );
+		
+
+		if (_currentLevel == 0)
 		{
-			std::cout<<"Couldn't find a material move\n";
-			return false;
+			// here we look for the best move
+			// pick best for us, then best for opponent, etc.
+			
+			// just pick a random substate for now.
+			std::cout<<"Finished. Picking best substate\n";
+			
+			//pickBest(_depth);
+			
+			// int chosenIndex = vSubstatesLegal.size()-1;
+			// *this = *vSubstatesLegal( chosenIndex );
+			clearSubs();
 		}
-		int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
-		*this = *vSubstatesLegal( chosenIndex );
-		clearSubs();
 		return true;
+	}
+	
+	// recurse and return best substate at given level
+	Board* pickBest(int _depth, int _currentLevel=0)
+	{
+		if ( _currentLevel == 0)
+		{
+			int bestScore = 0;
+			Vector <int> vBestIndex;
+			
+			for (int i=0;i<vSubstatesLegal.size();++i)
+			{
+				// build vector of best boards and pick best.
+				pickBest(_depth,_currentLevel+1);
+			}
+		}
+		else if ( _currentLevel < _depth )
+		{
+			// calculate scores for all subs
+			for (int i=0;i<vSubstatesLegal.size();++i)
+			{
+				return pickBest(_depth,_currentLevel+1);
+			}
+		}
+		else if (_currentLevel==_depth)
+		{
+			int bestScore = 0;
+			Vector <int> vBestIndex;
+			for (int i=0;i<vSubstatesLegal.size();++i)
+			{
+				// choose the best score on this level.
+				// pick randomly if multiple have the best score.
+				if ( vBestIndex.size() == 0 || score > bestScore)
+				{
+					bestScore = score;
+					vBestIndex.clear();
+					vBestIndex.push(i);
+				}
+				// we found another good move of equivalent value
+				else if ( score == bestScore)
+				{
+					vBestIndex.push(i);
+				}
+				if ( vBestIndex.size() == 0 )
+				{
+					return 0;
+				}
+				std::cout<<"Returning best\n";
+				int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
+				return (vSubstatesLegal( chosenIndex ));
+			}
+		}
+		
+		return 0;
 	}
 		
 	char boardStatus()
@@ -1946,6 +2044,8 @@ class Board
 			
 			for (int i=0;i<vSubstates.size();++i)
 			{
+				vSubstates(i)->parent = this;
+				
 				if (vSubstates(i)->hasKing(BLACK) == true &&
 					vSubstates(i)->hasKing(WHITE)== true)
 				{
@@ -2005,3 +2105,4 @@ class Board
 };
 
 int Board::STATIC_ID = 0;
+int Board::STATIC_N_SEARCH = 0;

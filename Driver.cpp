@@ -21,6 +21,14 @@
 // commands. We could break the state up into other useful information too,
 // for example a piece's rank and file.
 
+// possible heuristics
+// material
+// pawn structure (doubled/tripled pawns)
+// controlled spaces
+// covered pieces
+// minor piece imbalances (knight+bishop vs bishop+bishop)
+// king safety
+
 #include <File/FileManagerStatic.hpp>
 
 #include <Container/Vector/Vector.hpp>
@@ -189,6 +197,9 @@ int main (int narg, char ** arg)
 		// process input here.
 		if (input.find('b') != std::string::npos)
 		{
+			std::ios_base::sync_with_stdio(false);
+			std::cin.tie(NULL);
+	
 			// play entire game until somebody wins
 			int i=1;
 			while (true)
@@ -253,7 +264,7 @@ int main (int narg, char ** arg)
 					return 0;
 				}
 				
-				if (moveBlackDepth(4,8) != 0)
+				if (moveBlackDepth(2,8) != 0)
 				{
 					std::cout<<"White wins\n";
 					return 0;
