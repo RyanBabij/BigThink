@@ -1552,28 +1552,31 @@ class Board
 		generateSubs();
 		generateLegalMoves();
 		
-		int materialGap = 0;
+		//int materialGap = 0;
 		int bestScore = 0;
 		Vector <int> vBestIndex;
 		
 		for (int i=0;i<vSubstatesLegal.size();++i)
 		{
-			// calculate material gap.
-			materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
-			//std::cout<<"Material gap: "<<materialGap<<"\n";
+			vSubstatesLegal(i)->calculateScore(_team);
 			
-			materialGap+=vSubstatesLegal(i)->getPositionalScore(_team);
+			
+			// calculate material gap.
+			// materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
+			// //std::cout<<"Material gap: "<<materialGap<<"\n";
+			
+			// materialGap+=vSubstatesLegal(i)->getPositionalScore(_team);
 			
 			//std::cout<<"Material gap + positional score: "<<materialGap<<"\n";
 			
-			if ( vBestIndex.size() == 0 || materialGap > bestScore)
+			if ( vBestIndex.size() == 0 || vSubstatesLegal(i)->score > bestScore)
 			{
-				bestScore = materialGap;
+				bestScore = vSubstatesLegal(i)->score;
 				vBestIndex.clear();
 				vBestIndex.push(i);
 			}
 			// we found another good move of equivalent value
-			else if ( materialGap == bestScore)
+			else if ( vSubstatesLegal(i)->score == bestScore)
 			{
 				vBestIndex.push(i);
 			}
@@ -1596,28 +1599,21 @@ class Board
 		//generateSubs();
 		//generateLegalMoves();
 		
-		int materialGap = 0;
 		int bestScore = 0;
 		Vector <int> vBestIndex;
 		
 		for (int i=0;i<vSubstatesLegal.size();++i)
 		{
-			// calculate material gap.
-			materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
-			//std::cout<<"Material gap: "<<materialGap<<"\n";
-			
-			materialGap+=vSubstatesLegal(i)->getPositionalScore(_team);
-			
-			//std::cout<<"Material gap + positional score: "<<materialGap<<"\n";
-			
-			if ( vBestIndex.size() == 0 || materialGap > bestScore)
+			vSubstatesLegal(i)->calculateScore(_team);
+
+			if ( vBestIndex.size() == 0 || vSubstatesLegal(i)->score > bestScore)
 			{
-				bestScore = materialGap;
+				bestScore = vSubstatesLegal(i)->score;
 				vBestIndex.clear();
 				vBestIndex.push(i);
 			}
 			// we found another good move of equivalent value
-			else if ( materialGap == bestScore)
+			else if ( vSubstatesLegal(i)->score == bestScore)
 			{
 				vBestIndex.push(i);
 			}
@@ -1670,7 +1666,7 @@ class Board
 		generateLegalMoves();
 		//if ( _currentLevel != 0 )
 		{
-			pruneRandomly(_breadth);
+			//pruneRandomly(_breadth);
 			// prune best
 		}
 		
@@ -1679,54 +1675,24 @@ class Board
 			std::cout<<"No legal moves\n";
 			return false;
 		}
-		
-		//int materialGap = 0;
-		int bestScore = 0;
-		Vector <int> vBestIndex;
-		
+
 		// calculate scores for all subs
 		for (int i=0;i<vSubstatesLegal.size();++i)
 		{
 			// calculate material gap.
 			vSubstatesLegal(i)->calculateScore(_team);
 			
-			
-			if ( vBestIndex.size() == 0 || vSubstatesLegal(i)->score > bestScore)
-			{
-				bestScore = vSubstatesLegal(i)->score;
-				vBestIndex.clear();
-				vBestIndex.push(i);
-			}
-			// we found another good move of equivalent value
-			else if ( vSubstatesLegal(i)->score == bestScore)
-			{
-				vBestIndex.push(i);
-			}
 			vSubstatesLegal(i)->depthMove(_team, _depth, _breadth, _currentLevel+1);
 		}
 		
-		
-		// select best substate
-		//int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
-		//*this = *vSubstatesLegal( chosenIndex );
-		
-
 		if (_currentLevel == 0)
 		{
 			// here we look for the best move
 			// pick best for us, then best for opponent, etc.
-			
-			// just pick a random substate for now.
-			std::cout<<"Finished. Picking best substate\n";
-			
 			Board* best = pickBest(_team, _depth);
-			//std::cout<<"Pick best returned:\n";
 			
 			if ( best != 0 )
 			{
-				//std::cout<<"Depthsearch got a board:\n";
-				//std::cout<<best->getState(true)<<"\n\n";
-				
 				for (int i=0;i<_depth;++i)
 				{
 					//std::cout<<"Working back up:\n";
@@ -1740,9 +1706,7 @@ class Board
 					{
 						//std::cout<<best->getState(true)<<"\n\n";
 					}
-					
 				}
-				
 				*this = *best;
 				clearSubs();
 				return true;
@@ -1752,13 +1716,6 @@ class Board
 				std::cout<<"Depthsearch didn't get a board.\n";
 				return false;
 			}
-			
-			
-			
-			//pickBest(_depth);
-			
-			// int chosenIndex = vSubstatesLegal.size()-1;
-			// *this = *vSubstatesLegal( chosenIndex );
 			clearSubs();
 		}
 		return true;
@@ -1932,7 +1889,7 @@ class Board
 	}
 	
 	// calculate the score for this board state based on material.
-	int getMaterialScore(bool _team)
+	int getMaterialScore(const bool _team)
 	{
 		int _score = 0;
 		
@@ -1951,6 +1908,10 @@ class Board
 		delete vPiece;
 
 		return _score;
+	}
+	inline int getMaterialGap(const bool _team)
+	{
+		return getMaterialScore(_team)-getMaterialScore(!_team);
 	}
 	
 	// calculate the score for this board state based on position
@@ -1974,7 +1935,7 @@ class Board
 	// determine an overall score for this board state.
 	void calculateScore(bool _team)
 	{
-		score = getMaterialScore(_team)+getPositionalScore(_team);
+		score = getMaterialGap(_team)+getPositionalScore(_team);
 	}
 	
 	// randomly delete board states to keep breadth down to managable size
