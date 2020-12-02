@@ -1596,9 +1596,6 @@ class Board
 	// return the best substate on this level based on score
 	Board* bestSub(const bool _team)
 	{
-		//generateSubs();
-		//generateLegalMoves();
-		
 		int bestScore = 0;
 		Vector <int> vBestIndex;
 		
@@ -1718,19 +1715,20 @@ class Board
 			}
 			clearSubs();
 		}
-		return true;
+		return false;
 	}
 	
 	// recurse and return best substate at given level
 	Board* pickBest(const bool _team, int _depth, int _currentLevel=0)
 	{
 		// simply return the best substate without recursing
+		// this is basically a greedy algorithm.
 		if ( _depth==0 )
 		{
 			return bestSub(_team);
 		}
-		
-		
+
+		// base case: generate legal substates and begin recursion
 		if ( _currentLevel == 0)
 		{
 			int bestScore = 0;
@@ -1742,7 +1740,7 @@ class Board
 			{
 				// build vector of best boards and pick best.
 				// Make sure to account for null ptrs here
-				Board * b = vSubstatesLegal(i)->pickBest(_depth,_currentLevel+1);
+				Board * b = vSubstatesLegal(i)->pickBest(_team,_depth,_currentLevel+1);
 				
 				if ( b != 0 )
 				{
@@ -1764,47 +1762,40 @@ class Board
 				std::cout<<"Error: We couldn't find a best board.\n";
 				return 0;
 			}
-			//std::cout<<"pickBest: returning board\n";
 			int randomSlot = rng.rand(vBestBoards.size()-1);
 			return vBestBoards(randomSlot);
 		}
 		else if ( _currentLevel < _depth )
 		{
 			// calculate scores for all subs
+			// special case: game ends here.
+			if (vSubstatesLegal.size() == 0)
+			{
+				return this;
+			}
+			
 			for (int i=0;i<vSubstatesLegal.size();++i)
 			{
-				return vSubstatesLegal(i)->pickBest(_depth,_currentLevel+1);
+				return vSubstatesLegal(i)->pickBest(_team,_depth,_currentLevel+1);
 			}
 		}
+		// target level reached, return the best on this layer.
+		// or worst if it's the opponent.
 		else if (_currentLevel==_depth)
 		{
 			int bestScore = 0;
 			Vector <int> vBestIndex;
-			for (int i=0;i<vSubstatesLegal.size();++i)
+			// if we are side to play, return best score,
+			// otherwise return worst score.
+			if ( _team == sideToMove )
 			{
-				// choose the best score on this level.
-				// pick randomly if multiple have the best score.
-				if ( vBestIndex.size() == 0 || score > bestScore)
-				{
-					bestScore = score;
-					vBestIndex.clear();
-					vBestIndex.push(i);
-				}
-				// we found another good move of equivalent value
-				else if ( score == bestScore)
-				{
-					vBestIndex.push(i);
-				}
-				if ( vBestIndex.size() == 0 )
-				{
-					return 0;
-				}
-				//std::cout<<"Returning best\n";
-				int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
-				return (vSubstatesLegal( chosenIndex ));
+				return bestSub(_team);
+			}
+			else
+			{
+				return bestSub(_team);
 			}
 		}
-		
 		return 0;
 	}
 		
@@ -1933,9 +1924,14 @@ class Board
 	}
 	
 	// determine an overall score for this board state.
-	void calculateScore(bool _team)
+	void calculateScore(const bool _team)
 	{
 		score = getMaterialGap(_team)+getPositionalScore(_team);
+	}
+	// return an average of all substate scores.
+	int getSubscores(const bool _team)
+	{
+		return 0;
 	}
 	
 	// randomly delete board states to keep breadth down to managable size

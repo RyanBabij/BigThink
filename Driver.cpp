@@ -264,7 +264,7 @@ int main (int narg, char ** arg)
 					return 0;
 				}
 				
-				if (moveBlackDepth(0,99) != 0)
+				if (moveBlackDepth(1,999) != 0)
 				{
 					std::cout<<"White wins\n";
 					return 0;
