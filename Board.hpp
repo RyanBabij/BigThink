@@ -30,6 +30,8 @@ class Board
 	static int STATIC_ID;
 	static int STATIC_N_SEARCH;
 	
+	bool subsGenerated;
+	
 	~Board()
 	{
 		// wipe the board array
@@ -66,6 +68,8 @@ class Board
 		
 		id=STATIC_ID++;
 		parent=0;
+		
+		subsGenerated=false;
 	}
 	Board(const Board& board) // copy constructor
 	//(this should actually be a shift to substate)
@@ -99,6 +103,7 @@ class Board
 		
 		// recursively delete all substates
 		clearSubs();
+		subsGenerated=false;
 		
 		id=STATIC_ID++;
 	}
@@ -1684,36 +1689,56 @@ class Board
 		
 		if (_currentLevel == 0)
 		{
-			// here we look for the best move
-			// pick best for us, then best for opponent, etc.
-			Board* best = pickBest(_team, _depth);
+			
+			
+			std::cout<<"Legal moves: "<<vSubstatesLegal.size()<<"\n";
+			
+			
+			// find best average subscore
+			for (int i=0;i<vSubstatesLegal.size();++i)
+			{
+				int subScore = getSubscores(_team,_depth);
+				std::cout<<"Sub: "<<subScore<<"\n";
+			}
+			Board* best = pickBest2(_team, _depth);
 			
 			if ( best != 0 )
 			{
-				for (int i=0;i<_depth;++i)
-				{
-					//std::cout<<"Working back up:\n";
-					best = best->parent;
-					
-					if (best==0)
-					{
-						std::cout<<"Error: bad parent\n";
-					}
-					else
-					{
-						//std::cout<<best->getState(true)<<"\n\n";
-					}
-				}
 				*this = *best;
 				clearSubs();
 				return true;
 			}
-			else
-			{
-				std::cout<<"Depthsearch didn't get a board.\n";
-				return false;
-			}
-			clearSubs();
+			
+			// here we look for the best move
+			// pick best for us, then best for opponent, etc.
+			// Board* best = pickBest(_team, _depth);
+			
+			// if ( best != 0 )
+			// {
+				// for (int i=0;i<_depth;++i)
+				// {
+					// //std::cout<<"Working back up:\n";
+					// best = best->parent;
+					
+					// if (best==0)
+					// {
+						// std::cout<<"Error: bad parent\n";
+					// }
+					// else
+					// {
+						// //std::cout<<best->getState(true)<<"\n\n";
+					// }
+				// }
+				// *this = *best;
+				// clearSubs();
+				// return true;
+			// }
+			// else
+			// {
+				// std::cout<<"Depthsearch didn't get a board.\n";
+				// return false;
+			// }
+			// clearSubs();
 		}
 		return false;
 	}
@@ -1798,6 +1823,39 @@ class Board
 		}
 		return 0;
 	}
+	Board* pickBest2(bool _team, int _depth)
+	{
+		
+		//int materialGap = 0;
+		int bestScore = 0;
+		Vector <int> vBestIndex;
+		
+		for (int i=0;i<vSubstatesLegal.size();++i)
+		{
+			int subscore = vSubstatesLegal(i)->getSubscores(_team, _depth);
+
+			if ( vBestIndex.size() == 0 || subscore > bestScore)
+			{
+				bestScore = subscore;
+				vBestIndex.clear();
+				vBestIndex.push(i);
+			}
+			// we found another good move of equivalent value
+			else if ( subscore == bestScore)
+			{
+				vBestIndex.push(i);
+			}
+		}
+		
+		if (vBestIndex.size()==0)
+		{
+			std::cout<<"Couldn't find a material move\n";
+			return 0;
+		}
+		int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
+		return vSubstatesLegal( chosenIndex );
+	}
+	
 		
 	char boardStatus()
 	{
@@ -1923,15 +1981,83 @@ class Board
 		return 0;
 	}
 	
-	// determine an overall score for this board state.
+	// determine an overall score for this board state using various heuristics
+	// material gap
+	// controlled spaces
+	// n covering moves/covered pieces
+	// king safety
+	// pawn structure (doubled/tripled pawns)
+	// minor piece imbalances (knight+bishop vs bishop+bishop)
 	void calculateScore(const bool _team)
 	{
 		score = getMaterialGap(_team)+getPositionalScore(_team);
+		//std::cout<<"calc score: "<<score<<"\n";
 	}
-	// return an average of all substate scores.
-	int getSubscores(const bool _team)
+	
+	// return an average of all substate scores for this state
+	int getSubscores(const bool _team, int _depth, int _layer=0)
 	{
-		return 0;
+		
+		if (subsGenerated == false)
+		{
+			std::cout<<"r -1\n";
+			return -1;
+		}
+		
+		if ( _layer > _depth )
+		{
+			std::cout<<"r -1\n";
+			return -1;
+		}
+		else if (_layer < _depth)
+		{
+			//recurse
+			// return avg of all substate scores.
+			Vector <int> vScore;
+			for (int i=0;i<vSubstatesLegal.size();++i)
+			{
+				int subScore = vSubstatesLegal(i)->getSubscores(_team,_depth,_layer+1);
+				if (subScore != -1)
+				{
+					vScore.push(subScore);
+				}	
+			}
+			double sAverage = vScore.safeAverage();
+			std::cout<<"saverage: "<<sAverage<<"\n";
+			return sAverage;
+		}
+		else
+		{
+			//final state
+			// if ( vSubstatesLegal.size() == 0 )
+			// {
+				// if ( sideToMove == _team )
+				// {
+					// // this is a bad state for _team
+					// std::cout<<"r 0\n";
+					// return 0;
+				// }
+				// else
+				// {
+					// // this is a good state for _team
+					// std::cout<<" r 1000\n";
+					// return 1000;
+				// }
+			// }
+			//else
+			{
+				calculateScore(_team);
+				std::cout<<"r score: "<<score<<"\n";
+				//std::cout<<"board is:\n";
+				//std::cout<<mainBoard.getState(true)<<"\n\n";
+				return score;
+			}
+		}
+		
+
+		
+
+		
 	}
 	
 	// randomly delete board states to keep breadth down to managable size
@@ -2006,6 +2132,10 @@ class Board
 					//", "<<vSubstatesLegal2.size()<<"\n";
 					return true;
 				}
+			}
+			else
+			{
+				std::cout<<"Error: team is not sidetomove\n";
 			}
 			// else
 			// {
@@ -2104,6 +2234,7 @@ class Board
 				delete vPiece;
 			}
 		}
+		subsGenerated=true;
 	}
 	
 	// this needs to exist outside of generateSubstates to prevent recursion

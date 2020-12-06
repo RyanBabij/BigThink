@@ -21,14 +21,6 @@
 // commands. We could break the state up into other useful information too,
 // for example a piece's rank and file.
 
-// possible heuristics
-// material
-// pawn structure (doubled/tripled pawns)
-// controlled spaces
-// covered pieces
-// minor piece imbalances (knight+bishop vs bishop+bishop)
-// king safety
-
 #include <File/FileManagerStatic.hpp>
 
 #include <Container/Vector/Vector.hpp>
@@ -155,11 +147,94 @@ void printBoard(bool _log=true)
 	}
 }
 
+int aiPlay()
+{
+	// play entire game until somebody wins
+	int i=1;
+	while (true)
+	{	
+		std::cout<<"\n\nTurn: "<<i++<<"\n";
+		gameLog+="\n\nTurn: "+DataTools::toString(i-1)+"\n\n";
+		
+		printBoard();
+		
+		if (mainBoard.hasState(STALEMATE_MATERIAL))
+		{
+			std::cout<<"Stalemate: Lack of material.\n";
+			return 0;
+		}
+		
+		if ( mainBoard.hasState(WHITE_CHECK) )
+		{
+			std::cout<<"White is in check/checkmate.\n";
+			gameLog+="White is in check/checkmate.\n";
+		}
+		else if ( mainBoard.boardStatus() == 2 )
+		{
+			std::cout<<"Stalemate.\n";
+			gameLog+="Stalemate.\n";
+			return 0;
+		}
+		
+		if (mainBoard.hasKing(WHITE) == false)
+		{
+			std::cout<<"White king is ded.\n";
+			return 0;
+		}
+		
+		// if ( mainBoard.randomMove(WHITE) == false )
+		// {
+			// std::cout<<"White is unable to move.\n";
+			// return 0;
+		// }
+		//mainBoard.materialMove(WHITE);
+		//mainBoard.materialDepthMove(WHITE, 2);
+		if (mainBoard.greedyMove(WHITE) == false )
+		{
+			std::cout<<"White cannot move. Stalemate/checkmate.\n";
+			return 0;
+		}
+		
+		
+		// analysis
+		printBoard();
+		
+		printScore();
+		
+		if (mainBoard.hasState(STALEMATE_MATERIAL))
+		{
+			std::cout<<"Stalemate: Lack of material.\n";
+			return 0;
+		}
+		
+		if (mainBoard.hasKing(BLACK) == false)
+		{
+			std::cout<<"Black king is ded.\n";
+			return 0;
+		}
+		
+		if (moveBlackDepth(1,999) != 0)
+		{
+			std::cout<<"White wins\n";
+			return 0;
+		}
+		
+		printScore();
+	}
+	
+	// finished
+	std::cout<<"Writing game log\n";
+	FileManagerStatic::writeFreshString(gameLog,"gamelog.txt");
+	return 0;
+}
+
 int main (int narg, char ** arg)
 {	
 	rng.seed(time(NULL));
 	
 	mainBoard.reset();
+	
+	return aiPlay();
 	
 	std::cout<<"\n\nBigThink chess engine\n";
 	std::cout<<"Enter 4 digits to make move.\n";
@@ -200,83 +275,7 @@ int main (int narg, char ** arg)
 			// std::ios_base::sync_with_stdio(false);
 			// std::cin.tie(NULL);
 	
-			// play entire game until somebody wins
-			int i=1;
-			while (true)
-			{	
-				std::cout<<"\n\nTurn: "<<i++<<"\n";
-				gameLog+="\n\nTurn: "+DataTools::toString(i-1)+"\n\n";
-				
-				printBoard();
-				
-				if (mainBoard.hasState(STALEMATE_MATERIAL))
-				{
-					std::cout<<"Stalemate: Lack of material.\n";
-					return 0;
-				}
-				
-				if ( mainBoard.hasState(WHITE_CHECK) )
-				{
-					std::cout<<"White is in check/checkmate.\n";
-					gameLog+="White is in check/checkmate.\n";
-				}
-				else if ( mainBoard.boardStatus() == 2 )
-				{
-					std::cout<<"Stalemate.\n";
-					gameLog+="Stalemate.\n";
-					return 0;
-				}
-				
-				if (mainBoard.hasKing(WHITE) == false)
-				{
-					std::cout<<"White king is ded.\n";
-					return 0;
-				}
-				
-				// if ( mainBoard.randomMove(WHITE) == false )
-				// {
-					// std::cout<<"White is unable to move.\n";
-					// return 0;
-				// }
-				//mainBoard.materialMove(WHITE);
-				//mainBoard.materialDepthMove(WHITE, 2);
-				if (mainBoard.greedyMove(WHITE) == false )
-				{
-					std::cout<<"White cannot move. Stalemate/checkmate.\n";
-					return 0;
-				}
-				
-				
-				// analysis
-				printBoard();
-				
-				printScore();
-				
-				if (mainBoard.hasState(STALEMATE_MATERIAL))
-				{
-					std::cout<<"Stalemate: Lack of material.\n";
-					return 0;
-				}
-				
-				if (mainBoard.hasKing(BLACK) == false)
-				{
-					std::cout<<"Black king is ded.\n";
-					return 0;
-				}
-				
-				if (moveBlackDepth(1,999) != 0)
-				{
-					std::cout<<"White wins\n";
-					return 0;
-				}
-				
-				printScore();
-			}
-			
-			// finished
-			std::cout<<"Writing game log\n";
-			FileManagerStatic::writeFreshString(gameLog,"gamelog.txt");
-			return 0;
+			return aiPlay();
 		}
 		if (input.find('s') != std::string::npos)
 		{
