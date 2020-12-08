@@ -21,11 +21,17 @@
 // commands. We could break the state up into other useful information too,
 // for example a piece's rank and file.
 
-#include <File/FileManagerStatic.hpp>
+#define SLEEP_BETWEEN_TURNS
+#define SLEEP_AMOUNT 0
 
+#ifdef SLEEP_BETWEEN_TURNS
+	#define WILDCAT_WINDOWS
+	#include <System/Sleep/Sleep.hpp>
+#endif
+
+#include <File/FileManagerStatic.hpp>
 #include <Container/Vector/Vector.hpp>
 #include <Math/Random/RandomLehmer.hpp>
-
 #include <Data/DataTools.hpp>
 
 #include <iostream>
@@ -220,6 +226,9 @@ int aiPlay()
 		}
 		
 		printScore();
+		#ifdef SLEEP_BETWEEN_TURNS
+			sleep(SLEEP_AMOUNT);
+		#endif
 	}
 	
 	// finished

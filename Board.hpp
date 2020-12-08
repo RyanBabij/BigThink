@@ -1543,6 +1543,12 @@ class Board
 		
 		*this = *vSubstatesLegal(iMove);
 		clearSubs();
+		
+		if ( parent )
+		{
+			parent->clearSubs();
+		}
+		
 		return true;
 	}
 	
@@ -1567,10 +1573,10 @@ class Board
 			
 			
 			// calculate material gap.
-			// materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
+			//int materialGap = vSubstatesLegal(i)->getMaterialScore(_team) - vSubstatesLegal(i)->getMaterialScore(!_team);
 			// //std::cout<<"Material gap: "<<materialGap<<"\n";
 			
-			// materialGap+=vSubstatesLegal(i)->getPositionalScore(_team);
+			//materialGap+=vSubstatesLegal(i)->getPositionalScore(_team);
 			
 			//std::cout<<"Material gap + positional score: "<<materialGap<<"\n";
 			
@@ -1643,6 +1649,9 @@ class Board
 	// seems to be around 218.
 	bool depthMove(bool _team, int _depth, int _breadth=999, int _currentLevel=0)
 	{
+		return greedyMove(_team);
+		
+		
 		if (_currentLevel == 0)
 		{
 			STATIC_N_SEARCH=0;
@@ -1689,8 +1698,6 @@ class Board
 		
 		if (_currentLevel == 0)
 		{
-			
-			
 			std::cout<<"Legal moves: "<<vSubstatesLegal.size()<<"\n";
 			
 			
@@ -1706,6 +1713,9 @@ class Board
 			{
 				*this = *best;
 				clearSubs();
+				// maybe we need a function to clear neighbors?
+				// clear subs of all states not picked.
+				//clearNeighbors();
 				return true;
 			}
 			
@@ -1738,7 +1748,7 @@ class Board
 				// std::cout<<"Depthsearch didn't get a board.\n";
 				// return false;
 			// }
-			// clearSubs();
+			clearSubs();
 		}
 		return false;
 	}
@@ -2113,6 +2123,7 @@ class Board
 		// calling generateLegalMoves() here seems to cause recursion issues
 		// but not if we only call when finding check, not sure why
 		
+		
 		if (isCheck(_team))
 		{
 			//we are in check
@@ -2130,6 +2141,7 @@ class Board
 					//std::cout<<"Possible checkmate found 1\n";
 					//std::cout<<"Legal substates: "<<vSubstatesLegal.size()<<
 					//", "<<vSubstatesLegal2.size()<<"\n";
+					clearSubs();
 					return true;
 				}
 			}
@@ -2153,12 +2165,13 @@ class Board
 			
 
 		}
-		
+		clearSubs();
 		return false;
 	}
 	
 	bool isCheck(bool _team)
 	{
+		//return false;
 		// this causes performance issues because we need to generate 2 levels
 		// of substates. Maybe there is a way to improve this.
 		generateSubs();
@@ -2168,6 +2181,7 @@ class Board
 		{
 			if ( vSubstates(i)->hasKing(_team) == false )
 			{
+				clearSubs();
 				return true;
 			}
 		}
@@ -2175,9 +2189,11 @@ class Board
 		{
 			if ( vSubstates2(i)->hasKing(_team) == false )
 			{
+				clearSubs();
 				return true;
 			}
 		}
+		clearSubs();
 		return false;
 	}
 	
@@ -2297,6 +2313,8 @@ class Board
 	
 	void clearSubs()
 	{
+		//clearNeighbors();
+		//return;
 		// recursively delete all substates
 		vSubstates.clearPtr();
 		// vSubstatesLegal is a subset of vSubstates so it doesn't need to be
@@ -2304,6 +2322,31 @@ class Board
 		vSubstatesLegal.clear();
 		vSubstates2.clearPtr();
 		vSubstatesLegal2.clear();
+	}
+	void clearNeighbors()
+	{
+		std::cout<<"Clearneighbours called\n";
+		// go to parent and then clear all states which aren't this one.
+		if (parent!=0)
+		{
+			std::cout<<"deleting substates of:\n"<<parent->getState(true)<<"\n\n";
+			for (int i=0;i<parent->vSubstates.size();++i)
+			{
+				if (parent->vSubstates(i) != this)
+				{
+					delete parent->vSubstates(i);
+					parent->vSubstates(i)=0;
+				}
+				parent->vSubstates.removeNulls();
+			}
+			for (int i=0;i<parent->vSubstates2.size();++i)
+			{
+				if (parent->vSubstates2(i) != this)
+				{
+					//delete parent->vSubstates2(i);
+				}
+			}
+		}
 	}
 };
 
