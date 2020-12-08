@@ -2001,7 +2001,7 @@ class Board
 	void calculateScore(const bool _team)
 	{
 		score = getMaterialGap(_team)+getPositionalScore(_team);
-		//std::cout<<"calc score: "<<score<<"\n";
+		std::cout<<STATIC_ID<<": calc score: "<<score<<"\n";
 	}
 	
 	// return an average of all substate scores for this state
@@ -2119,7 +2119,7 @@ class Board
 	bool isCheckmate(bool _team)
 	{
 		//return false;
-		generateSubs();
+		//generateSubs();
 		// calling generateLegalMoves() here seems to cause recursion issues
 		// but not if we only call when finding check, not sure why
 		
@@ -2128,6 +2128,7 @@ class Board
 		{
 			//we are in check
 			//std::cout<<"Check found, looking for checkmate\n";
+			generateSubs();
 			generateLegalMoves();
 
 			if ( _team == sideToMove )
