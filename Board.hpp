@@ -1649,7 +1649,7 @@ class Board
 	// seems to be around 218.
 	bool depthMove(bool _team, int _depth, int _breadth=999, int _currentLevel=0)
 	{
-		//return greedyMove(_team);
+		//return randomMove(_team);
 		
 		
 		if (_currentLevel == 0)
@@ -1704,7 +1704,7 @@ class Board
 			for (int i=0;i<vSubstatesLegal.size();++i)
 			{
 				int subScore = vSubstatesLegal(i)->getSubscores(_team,_depth);
-				//std::cout<<"Sub: "<<subScore<<"\n";
+				std::cout<<"Subscore "<<i<<": "<<subScore<<"\n";
 			}
 			Board* best = pickBest2(_team, _depth);
 			
@@ -2039,6 +2039,27 @@ class Board
 		}
 		else if (_layer < _depth)
 		{
+			generateSubs();
+			generateLegalMoves();
+			if (isCheckmate(_team))
+			{
+				return -1000;
+			}
+			generateSubs();
+			generateLegalMoves();
+			if (isCheckmate(!_team))
+			{
+				return 1000;
+			}
+			
+			generateSubs();
+			generateLegalMoves();
+			
+			if (vSubstatesLegal.size() == 0)
+			{
+				// stalemate
+				return -500;
+			}
 			//recurse
 			// return avg of all substate scores.
 			Vector <int> vScore;
@@ -2048,7 +2069,7 @@ class Board
 				if (subScore != -1)
 				{
 					vScore.push(subScore);
-				}	
+				}
 			}
 			double sAverage = vScore.safeAverage();
 			//std::cout<<"saverage: "<<sAverage<<"\n";

@@ -195,7 +195,7 @@ int aiPlay()
 		// }
 		//mainBoard.materialMove(WHITE);
 		//mainBoard.materialDepthMove(WHITE, 2);
-		if (mainBoard.greedyMove(WHITE) == false )
+		if (mainBoard.randomMove(WHITE) == false )
 		{
 			std::cout<<"White cannot move. Stalemate/checkmate.\n";
 			return 0;
