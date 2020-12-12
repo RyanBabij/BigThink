@@ -29,6 +29,9 @@
 	#include <System/Sleep/Sleep.hpp>
 #endif
 
+#define TIME_BETWEEN_TURNS 1000
+
+#include <System/Time/Timer.hpp>
 #include <File/FileManagerStatic.hpp>
 #include <Container/Vector/Vector.hpp>
 #include <Math/Random/RandomLehmer.hpp>
@@ -153,12 +156,16 @@ void printBoard(bool _log=true)
 	}
 }
 
+Timer turnTimer;
+
 int aiPlay()
 {
+	turnTimer.init();
+	
 	// play entire game until somebody wins
 	int i=1;
 	while (true)
-	{	
+	{
 		std::cout<<"\n\nTurn: "<<i++<<"\n";
 		gameLog+="\n\nTurn: "+DataTools::toString(i-1)+"\n\n";
 		
@@ -195,7 +202,7 @@ int aiPlay()
 		// }
 		//mainBoard.materialMove(WHITE);
 		//mainBoard.materialDepthMove(WHITE, 2);
-		if (mainBoard.randomMove(WHITE) == false )
+		if (mainBoard.greedyMove(WHITE) == false )
 		{
 			std::cout<<"White cannot move. Stalemate/checkmate.\n";
 			return 0;
@@ -219,15 +226,24 @@ int aiPlay()
 			return 0;
 		}
 		
+		turnTimer.init();
+		turnTimer.start();
+		
 		if (moveBlackDepth(1,999) != 0)
 		{
 			std::cout<<"White wins\n";
 			return 0;
 		}
 		
+		turnTimer.update();
+		while (turnTimer.uSeconds < TIME_BETWEEN_TURNS)
+		{
+			sleep(100);
+		}
+		
 		printScore();
 		#ifdef SLEEP_BETWEEN_TURNS
-			sleep(SLEEP_AMOUNT);
+			//sleep(SLEEP_AMOUNT);
 		#endif
 	}
 	

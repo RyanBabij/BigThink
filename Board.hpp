@@ -1647,6 +1647,9 @@ class Board
 	// you can emulate greedy search using depth=0.
 	// Note that the maximum possible number of moves for a single side
 	// seems to be around 218.
+	
+	// depthMove 1 can beat greedyMove because it can also avoid moving into
+	// weak moves like opening itself to check/checkmate.
 	bool depthMove(bool _team, int _depth, int _breadth=999, int _currentLevel=0)
 	{
 		//return randomMove(_team);
@@ -2041,9 +2044,15 @@ class Board
 		{
 			generateSubs();
 			generateLegalMoves();
-			if (isCheckmate(_team))
+			if (isCheck(_team))
 			{
-				return -1000;
+				generateSubs();
+				generateLegalMoves();
+				if (isCheckmate(_team))
+				{
+					return -1000;
+				}
+				return -500;
 			}
 			generateSubs();
 			generateLegalMoves();
