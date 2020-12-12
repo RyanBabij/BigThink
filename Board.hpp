@@ -1649,7 +1649,7 @@ class Board
 	// seems to be around 218.
 	bool depthMove(bool _team, int _depth, int _breadth=999, int _currentLevel=0)
 	{
-		return greedyMove(_team);
+		//return greedyMove(_team);
 		
 		
 		if (_currentLevel == 0)
@@ -1700,12 +1700,11 @@ class Board
 		{
 			std::cout<<"Legal moves: "<<vSubstatesLegal.size()<<"\n";
 			
-			
 			// find best average subscore
 			for (int i=0;i<vSubstatesLegal.size();++i)
 			{
-				int subScore = getSubscores(_team,_depth);
-				std::cout<<"Sub: "<<subScore<<"\n";
+				int subScore = vSubstatesLegal(i)->getSubscores(_team,_depth);
+				//std::cout<<"Sub: "<<subScore<<"\n";
 			}
 			Board* best = pickBest2(_team, _depth);
 			
@@ -1863,6 +1862,8 @@ class Board
 			return 0;
 		}
 		int chosenIndex = vBestIndex(rng.rand(vBestIndex.size()-1));
+		
+		std::cout<<"Board chosen: "<<chosenIndex<<" with score "<<bestScore<<"\n";
 		return vSubstatesLegal( chosenIndex );
 	}
 	
@@ -1977,17 +1978,34 @@ class Board
 	// this includes check/checkmate.
 	int getPositionalScore(bool _team)
 	{
-		if (isCheckmate(!_team))
+		if (isCheck(!_team))
 		{
-			// checkmate should obviously be the maximum score.
-			return 2000;
+			return 100;
+			if (isCheckmate(!_team))
+			{
+				return 2000;
+			}
 		}
-		else if (isCheck(!_team))
+		if (isCheck(_team))
 		{
-			// for now I'll make check about the same value as a pawn capture.
-			// however in reality it might not be that valuable.
-			//return 1;
+			if (isCheckmate(_team))
+			{
+				return -2000;
+			}
+			return -10;
 		}
+		
+		// if (isCheckmate(!_team))
+		// {
+			// // checkmate should obviously be the maximum score.
+			// return 2000;
+		// }
+		// else if (isCheck(!_team))
+		// {
+			// // for now I'll make check about the same value as a pawn capture.
+			// // however in reality it might not be that valuable.
+			// //return 1;
+		// }
 		return 0;
 	}
 	
@@ -2001,7 +2019,7 @@ class Board
 	void calculateScore(const bool _team)
 	{
 		score = getMaterialGap(_team)+getPositionalScore(_team);
-		std::cout<<STATIC_ID<<": calc score: "<<score<<"\n";
+		//std::cout<<STATIC_ID<<": calc score: "<<score<<"\n";
 	}
 	
 	// return an average of all substate scores for this state
@@ -2010,13 +2028,13 @@ class Board
 		
 		if (subsGenerated == false)
 		{
-			std::cout<<"r -1\n";
+			//std::cout<<"r -1\n";
 			return -1;
 		}
 		
 		if ( _layer > _depth )
 		{
-			std::cout<<"r -1\n";
+			//std::cout<<"r -1\n";
 			return -1;
 		}
 		else if (_layer < _depth)
@@ -2033,7 +2051,7 @@ class Board
 				}	
 			}
 			double sAverage = vScore.safeAverage();
-			std::cout<<"saverage: "<<sAverage<<"\n";
+			//std::cout<<"saverage: "<<sAverage<<"\n";
 			return sAverage;
 		}
 		else
@@ -2057,7 +2075,8 @@ class Board
 			//else
 			{
 				calculateScore(_team);
-				std::cout<<"r score: "<<score<<"\n";
+				//std::cout<<"r score: "<<score<<"\n";
+				
 				//std::cout<<"board is:\n";
 				//std::cout<<mainBoard.getState(true)<<"\n\n";
 				return score;
